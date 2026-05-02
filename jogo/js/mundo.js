@@ -3,6 +3,7 @@ var terrenoMesh;
 var ceuGrupo;       // dome + sol + lua + estrelas — segue a camera
 var skyMaterial;    // material do shader do dome (uniforms manipulados pelo tempo)
 var luzAmbienteGlobal;
+var luzLuarGlobal;  // luz suave azulada que cresce a noite (jogabilidade)
 var solGlobal;      // DirectionalLight
 var solVisualMesh;  // esfera amarela representando o sol
 var luaMesh;        // esfera branca-azulada
@@ -71,6 +72,13 @@ function iniciarMundo() {
   var fill = new THREE.DirectionalLight(0xb8c9d9, 0.3);
   fill.position.set(-50, 25, -30);
   cena.add(fill);
+
+  // Luz da lua — azulada, suave, intensidade controlada pelo tempo (0 de dia → max a noite)
+  // Garante jogabilidade a noite sem matar o clima
+  var luar = new THREE.DirectionalLight(0xa0b8e0, 0);
+  luar.position.set(0, 80, -40);
+  luzLuarGlobal = luar;
+  cena.add(luar);
 }
 
 // Skybox com gradiente — usa um shader simples num cubo grande
@@ -149,10 +157,16 @@ function aplicarTempoNoMundo(t) {
     luaMesh.visible = solGlobal.intensity < 0.4;
   }
 
-  // Luz ambiente: maior de dia, menor a noite
+  // Luz ambiente: maior de dia, mas com piso decente a noite (jogabilidade)
   if (luzAmbienteGlobal) {
     var fator = solGlobal.intensity / 1.85; // 0..1
-    luzAmbienteGlobal.intensity = 0.18 + fator * 0.45;
+    luzAmbienteGlobal.intensity = 0.42 + fator * 0.25; // noite=0.42, dia=0.67
+  }
+
+  // Luz da lua: cresce conforme o sol diminui (max 0.55 a noite total)
+  if (luzLuarGlobal) {
+    var fatorNoite = 1 - (solGlobal.intensity / 1.85);
+    luzLuarGlobal.intensity = fatorNoite * 0.55;
   }
 }
 
