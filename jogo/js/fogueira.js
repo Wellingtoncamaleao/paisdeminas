@@ -110,3 +110,40 @@ function apagarFogueiraVisual(f) {
   if (f.mesh.userData.chama) f.mesh.userData.chama.visible = false;
   if (f.mesh.userData.luz) f.mesh.userData.luz.intensity = 0;
 }
+
+// Tenta acender uma fogueira apagada perto do ponto (px, pz). Custa 3 madeira.
+// Retorna true se reacendeu (chamado por coleta.js — tecla E)
+function tentarAcenderFogueiraProx(px, pz, raioInteracao) {
+  var raio = raioInteracao || 2.8;
+  var raio2 = raio * raio;
+  var alvo = null;
+  var menorDist = Infinity;
+
+  for (var i = 0; i < fogueirasConstruidas.length; i++) {
+    var f = fogueirasConstruidas[i];
+    if (f.ativa) continue; // ja acesa
+    var dx = px - f.x;
+    var dz = pz - f.z;
+    var d2 = dx * dx + dz * dz;
+    if (d2 < menorDist && d2 < raio2) {
+      menorDist = d2;
+      alvo = f;
+    }
+  }
+  if (!alvo) return false;
+
+  // Tem madeira pra acender?
+  if (!gastarRecursos({ madeira: 3 })) {
+    if (typeof mostrarDica === 'function') mostrarDica('Precisa de 3 madeiras pra acender', 2000);
+    return true; // intercepta a interacao mesmo sem ter madeira (nao tenta coletar arvore)
+  }
+
+  alvo.ativa = true;
+  alvo.fase = Math.random() * 10;
+  if (alvo.mesh.userData.chama) alvo.mesh.userData.chama.visible = true;
+  // Reseta o cronometro de consumo pra essa fogueira nao ser cobrada imediatamente
+  ultimoConsumoFogueiraMs = performance.now();
+  salvarFogueiras();
+  if (typeof mostrarDica === 'function') mostrarDica('Fogueira acesa', 1800);
+  return true;
+}

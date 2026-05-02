@@ -16,6 +16,14 @@ function tentarColeta() {
   var px = personagem.position.x;
   var pz = personagem.position.z;
 
+  // 0. Se tem fogueira apagada perto, prioriza acender (mesma tecla E)
+  if (typeof tentarAcenderFogueiraProx === 'function') {
+    if (tentarAcenderFogueiraProx(px, pz, raioInteracao)) {
+      ultimaColetaMs = agora;
+      return;
+    }
+  }
+
   // 1. Tenta arvore mais proxima
   var arv = encontrarMaisProximo(arvoresPos, px, pz);
   if (arv) {
