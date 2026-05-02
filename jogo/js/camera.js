@@ -11,6 +11,10 @@ var presetsCamera = [
   { nome: 'DISTANTE', dist: 13,   pitch: 0.75, alturaAlvo: 1.5 },
   { nome: 'TÁTICA',   dist: 20,   pitch: 1.30, alturaAlvo: 1.5 }
 ];
+
+// Distancia efetiva pra interpolar suavemente quando entra/sai de cabana
+var distanciaCameraEfetiva = 8.5;
+var DIST_DENTRO_CABANA = 2.2;
 var presetCameraAtual = 1; // PADRAO por default
 var CHAVE_CAMERA = 'paisdeminas-camera-preset';
 
@@ -48,22 +52,27 @@ function atualizarCamera(delta) {
   // Aplica delta acumulado do mouse
   cameraYaw -= mouseDX * sensibilidadeMouse;
   cameraPitch -= mouseDY * sensibilidadeMouse;
-  // Limita pitch pra nao virar de cabeca pra baixo
   cameraPitch = Math.max(-0.4, Math.min(1.1, cameraPitch));
   mouseDX = 0;
   mouseDY = 0;
+
+  // Distancia alvo: limitada se dentro de cabana (camera fica perto, nao bloqueada por parede)
+  var dentro = (typeof personagemDentroDeCabana !== 'undefined') && personagemDentroDeCabana;
+  var distAlvo = dentro ? Math.min(distanciaCamera, DIST_DENTRO_CABANA) : distanciaCamera;
+
+  // Lerp suave (transicao em ~0.4s)
+  distanciaCameraEfetiva += (distAlvo - distanciaCameraEfetiva) * Math.min(delta * 6, 1);
 
   // Posicao da camera: esfera ao redor do personagem
   var px = personagem.position.x;
   var py = personagem.position.y;
   var pz = personagem.position.z;
 
-  var distHoriz = distanciaCamera * Math.cos(cameraPitch);
+  var distHoriz = distanciaCameraEfetiva * Math.cos(cameraPitch);
   var cx = px + Math.sin(cameraYaw) * distHoriz;
   var cz = pz + Math.cos(cameraYaw) * distHoriz;
-  var cy = py + alturaAlvo + distanciaCamera * Math.sin(cameraPitch);
+  var cy = py + alturaAlvo + distanciaCameraEfetiva * Math.sin(cameraPitch);
 
-  // Nao deixar camera ir abaixo do chao
   if (cy < 0.5) cy = 0.5;
 
   camera.position.set(cx, cy, cz);

@@ -127,6 +127,10 @@ function selecionarCabana(tipo) {
   modoConstrucao = 'posicionando';
 }
 
+// Flag global — true se MEU personagem está dentro de alguma cabana.
+// Câmera usa pra zoomar (ficar perto, não bloqueada por paredes externas).
+var personagemDentroDeCabana = false;
+
 // Esconde telhado das cabanas quando QUALQUER personagem (eu ou avatares de
 // outros players) entra dentro. Aplica a TODAS as cabanas (minhas e dos outros).
 // Convenção tipo Sims/RimWorld.
@@ -152,6 +156,8 @@ function atualizarTelhadoCabanas() {
     }
   }
 
+  var meuDentroAlguma = false;
+
   for (var j = 0; j < todasCabanas.length; j++) {
     var c = todasCabanas[j];
     if (!c.mesh || !c.mesh.userData.telhado) continue;
@@ -167,11 +173,14 @@ function atualizarTelhadoCabanas() {
       var localZ = dx * sinR + dz * cosR;
       if (Math.abs(localX) < lado / 2 - 0.2 && Math.abs(localZ) < lado / 2 - 0.2) {
         alguemDentro = true;
+        if (k === 0) meuDentroAlguma = true; // posicoes[0] = MEU personagem
         break;
       }
     }
     c.mesh.userData.telhado.visible = !alguemDentro;
   }
+
+  personagemDentroDeCabana = meuDentroAlguma;
 }
 
 function atualizarConstrucao(delta) {
