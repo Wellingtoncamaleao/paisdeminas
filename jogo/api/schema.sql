@@ -24,8 +24,10 @@ CREATE TABLE IF NOT EXISTS claims (
   rot_y REAL NOT NULL DEFAULT 0,
   pilha_mad_offx REAL,
   pilha_mad_offz REAL,
+  pilha_mad_rot REAL DEFAULT 0,
   pilha_ped_offx REAL,
   pilha_ped_offz REAL,
+  pilha_ped_rot REAL DEFAULT 0,
   criado_em TEXT DEFAULT (datetime('now'))
 );
 

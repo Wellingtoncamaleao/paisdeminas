@@ -42,6 +42,8 @@ function aplicarMigrations(PDO $pdo): void {
     if (!in_array('pilha_mad_offz', $cClaims, true)) $pdo->exec('ALTER TABLE claims ADD COLUMN pilha_mad_offz REAL');
     if (!in_array('pilha_ped_offx', $cClaims, true)) $pdo->exec('ALTER TABLE claims ADD COLUMN pilha_ped_offx REAL');
     if (!in_array('pilha_ped_offz', $cClaims, true)) $pdo->exec('ALTER TABLE claims ADD COLUMN pilha_ped_offz REAL');
+    if (!in_array('pilha_mad_rot', $cClaims, true)) $pdo->exec('ALTER TABLE claims ADD COLUMN pilha_mad_rot REAL DEFAULT 0');
+    if (!in_array('pilha_ped_rot', $cClaims, true)) $pdo->exec('ALTER TABLE claims ADD COLUMN pilha_ped_rot REAL DEFAULT 0');
 }
 
 function jsonResposta($dados, int $status = 200): void {

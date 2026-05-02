@@ -36,6 +36,7 @@ function atualizarPilhas() {
     pilhaMadeiraGrupo.userData.tipoPilha = 'madeira';
     construirPilhaMadeira(pilhaMadeiraGrupo, nToras);
     pilhaMadeiraGrupo.position.set(cx + offMad.x, 0, cz + offMad.z);
+    pilhaMadeiraGrupo.rotation.y = claimAtual.pilhaMadRot || 0;
     cena.add(pilhaMadeiraGrupo);
   }
 
@@ -45,6 +46,7 @@ function atualizarPilhas() {
     pilhaPedraGrupo.userData.tipoPilha = 'pedra';
     construirPilhaPedra(pilhaPedraGrupo, inventario.pedra);
     pilhaPedraGrupo.position.set(cx + offPed.x, 0, cz + offPed.z);
+    pilhaPedraGrupo.rotation.y = claimAtual.pilhaPedRot || 0;
     cena.add(pilhaPedraGrupo);
   }
 }

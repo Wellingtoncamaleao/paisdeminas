@@ -153,12 +153,15 @@ async function soltarObjeto() {
       var tipoPilha = objMovendo.tipo === 'pilha-madeira' ? 'madeira' : 'pedra';
       var offX = x - claimAtual.x;
       var offZ = z - claimAtual.z;
-      await apiSalvarOffsetPilha(tipoPilha, offX, offZ);
-      // Atualiza claimAtual local pra refletir
+      var rotPilha = ref.mesh.rotation.y;
+      await apiSalvarOffsetPilha(tipoPilha, offX, offZ, rotPilha);
+      // Atualiza claimAtual local pra refletir (proxima atualizarPilhas usa esses valores)
       if (tipoPilha === 'madeira') {
         claimAtual.pilhaMadOffX = offX; claimAtual.pilhaMadOffZ = offZ;
+        claimAtual.pilhaMadRot = rotPilha;
       } else {
         claimAtual.pilhaPedOffX = offX; claimAtual.pilhaPedOffZ = offZ;
+        claimAtual.pilhaPedRot = rotPilha;
       }
     }
   } catch (e) {

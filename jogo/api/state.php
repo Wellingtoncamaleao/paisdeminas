@@ -29,7 +29,7 @@ if ($metodo === 'GET') {
 
     // Carrega estado completo do player
     $claim = null;
-    $stmt = $pdo->prepare('SELECT x, z, larg, prof, rot_y, pilha_mad_offx, pilha_mad_offz, pilha_ped_offx, pilha_ped_offz FROM claims WHERE player_id = ? LIMIT 1');
+    $stmt = $pdo->prepare('SELECT x, z, larg, prof, rot_y, pilha_mad_offx, pilha_mad_offz, pilha_mad_rot, pilha_ped_offx, pilha_ped_offz, pilha_ped_rot FROM claims WHERE player_id = ? LIMIT 1');
     $stmt->execute([$player['id']]);
     if ($row = $stmt->fetch()) {
         $claim = [
@@ -38,8 +38,10 @@ if ($metodo === 'GET') {
             'rotY' => (float)$row['rot_y'],
             'pilhaMadOffX' => $row['pilha_mad_offx'] !== null ? (float)$row['pilha_mad_offx'] : null,
             'pilhaMadOffZ' => $row['pilha_mad_offz'] !== null ? (float)$row['pilha_mad_offz'] : null,
+            'pilhaMadRot' => $row['pilha_mad_rot'] !== null ? (float)$row['pilha_mad_rot'] : 0,
             'pilhaPedOffX' => $row['pilha_ped_offx'] !== null ? (float)$row['pilha_ped_offx'] : null,
             'pilhaPedOffZ' => $row['pilha_ped_offz'] !== null ? (float)$row['pilha_ped_offz'] : null,
+            'pilhaPedRot' => $row['pilha_ped_rot'] !== null ? (float)$row['pilha_ped_rot'] : 0,
         ];
     }
 
@@ -165,12 +167,14 @@ if ($action === 'salvar_offset_pilha') {
     $tipo = $dados['tipo'] ?? '';
     $offX = (float)($dados['offX'] ?? 0);
     $offZ = (float)($dados['offZ'] ?? 0);
-    $col = null;
-    if ($tipo === 'madeira') { $colX = 'pilha_mad_offx'; $colZ = 'pilha_mad_offz'; }
-    elseif ($tipo === 'pedra') { $colX = 'pilha_ped_offx'; $colZ = 'pilha_ped_offz'; }
-    else jsonResposta(['erro' => 'Tipo invalido'], 400);
-    $stmt = $pdo->prepare("UPDATE claims SET $colX = ?, $colZ = ? WHERE player_id = ?");
-    $stmt->execute([$offX, $offZ, $player['id']]);
+    $rotY = (float)($dados['rotY'] ?? 0);
+    if ($tipo === 'madeira') {
+        $colX = 'pilha_mad_offx'; $colZ = 'pilha_mad_offz'; $colR = 'pilha_mad_rot';
+    } elseif ($tipo === 'pedra') {
+        $colX = 'pilha_ped_offx'; $colZ = 'pilha_ped_offz'; $colR = 'pilha_ped_rot';
+    } else jsonResposta(['erro' => 'Tipo invalido'], 400);
+    $stmt = $pdo->prepare("UPDATE claims SET $colX = ?, $colZ = ?, $colR = ? WHERE player_id = ?");
+    $stmt->execute([$offX, $offZ, $rotY, $player['id']]);
     jsonResposta(['ok' => true]);
 }
 
