@@ -52,10 +52,24 @@ Verificar com: `nslookup paisdeminas.wcamaleao.com`
 - **Dockerfile path**: `Dockerfile`
 
 ### Deploy
-- **Port**: `80` (nginx interno)
+- **Port**: `80` (Apache interno)
 - **Replicas**: 1
-- **Memory limit**: 128 MB (jogo é leve, conteúdo estático)
+- **Memory limit**: 256 MB (PHP + Apache + SQLite — pouco mais que só nginx)
 - **CPU limit**: 0.5 cores
+
+### ⚠️ Volume persistente — OBRIGATÓRIO desde Fase 4
+
+O jogo agora usa SQLite pra contas, claims e progresso. Sem volume,
+**dados são perdidos a cada deploy**.
+
+Aba **Volumes** do app:
+- **+ Adicionar Volume**
+- **Tipo**: Volume nomeado
+- **Source**: `paisdeminas-data`
+- **Mount path**: `/var/www/data`
+- Salva e **Reimplantar**
+
+Backup periódico: `docker cp <container>:/var/www/data/paisdeminas.db ./backup-$(date +%F).db`
 
 ### Domain
 - **+ Add domain**: `paisdeminas.wcamaleao.com`

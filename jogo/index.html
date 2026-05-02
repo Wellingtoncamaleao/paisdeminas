@@ -10,6 +10,26 @@
   <link rel="stylesheet" href="css/estilo.css?v=__BUILD__">
 </head>
 <body>
+  <div id="tela-login" class="oculto">
+    <h1>Minas Gerais 1500</h1>
+    <div class="login-abas">
+      <button id="aba-entrar" class="aba ativa">Entrar</button>
+      <button id="aba-criar" class="aba">Criar conta</button>
+    </div>
+    <div id="form-entrar" class="login-form">
+      <input id="login-nome-entrar" type="text" placeholder="Seu nome (com número, ex: João1)" maxlength="20" autocomplete="username" />
+      <input id="login-senha-entrar" type="password" placeholder="Senha" maxlength="30" autocomplete="current-password" />
+      <button id="btn-login-entrar" class="login-btn">Entrar</button>
+    </div>
+    <div id="form-criar" class="login-form oculto">
+      <input id="login-nome-criar" type="text" placeholder="Escolha um nome (com número)" maxlength="20" autocomplete="username" />
+      <input id="login-senha-criar" type="password" placeholder="Escolha uma senha (mín. 4 chars)" maxlength="30" autocomplete="new-password" />
+      <button id="btn-login-criar" class="login-btn">Criar conta</button>
+    </div>
+    <div id="login-erro"></div>
+    <p class="login-aviso">Nomes "limpos" sem número (ex: <i>Victor</i>) ficam reservados. Use <i>Victor1</i>, <i>Vitinho2026</i> etc.</p>
+  </div>
+
   <div id="tela-inicial">
     <h1>Minas Gerais 1500</h1>
     <p class="subtitulo">Um simulador de colonização nas terras virgens dos anos 1500</p>
@@ -77,6 +97,8 @@
   <canvas id="canvas-jogo"></canvas>
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="js/api.js?v=__BUILD__"></script>
+  <script src="js/login.js?v=__BUILD__"></script>
   <script src="js/texturas.js?v=__BUILD__"></script>
   <script src="js/tempo.js?v=__BUILD__"></script>
   <script src="js/mundo.js?v=__BUILD__"></script>

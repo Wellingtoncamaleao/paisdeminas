@@ -1,16 +1,27 @@
-FROM nginx:alpine
+FROM php:8.2-apache
+
+# Extensoes necessarias: PDO_SQLite (banco) + headers (cache busting)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libsqlite3-dev \
+    && docker-php-ext-install pdo pdo_sqlite \
+    && a2enmod headers rewrite \
+    && rm -rf /var/lib/apt/lists/*
 
 # Conteudo do jogo
-COPY jogo/ /usr/share/nginx/html/
+COPY jogo/ /var/www/html/
 
-# Config nginx (cache busting + gzip + headers)
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Config Apache (cache busting + .htaccess da pasta api/)
+COPY apache.conf /etc/apache2/sites-available/000-default.conf
 
-# Substitui __BUILD__ pelo timestamp da build pra forcar refresh de assets
-# (HTML eh sempre no-cache, entao browser sempre pega novo BUILD)
+# Diretorio persistente pro SQLite (volume montado no Easypanel: /var/www/data)
+RUN mkdir -p /var/www/data \
+    && chown -R www-data:www-data /var/www/data /var/www/html \
+    && chmod 755 /var/www/data
+VOLUME ["/var/www/data"]
+
+# Substitui __BUILD__ pelo timestamp do build pra forcar refresh de assets
 RUN BUILD_ID=$(date +%s) && \
-    sed -i "s/__BUILD__/$BUILD_ID/g" /usr/share/nginx/html/index.html && \
+    sed -i "s/__BUILD__/$BUILD_ID/g" /var/www/html/index.html && \
     echo "Build ID: $BUILD_ID"
 
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]

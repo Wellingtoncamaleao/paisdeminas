@@ -10,38 +10,21 @@ var CLAIM_LARG = 24;
 var CLAIM_PROF = 16;
 
 function inicializarClaim() {
-  try {
-    var salvo = localStorage.getItem(CHAVE_CLAIM);
-    if (!salvo) return;
-    claimAtual = JSON.parse(salvo);
+  // Estado vem do servidor (window.estadoServidor.claim) - carregado antes do iniciarJogo
+  if (!window.estadoServidor || !window.estadoServidor.claim) return;
+  claimAtual = window.estadoServidor.claim;
 
-    // Migracao: claim antigo tinha 'raio' (circular). Converte pra retangulo equivalente.
-    if (claimAtual.raio !== undefined && claimAtual.larg === undefined) {
-      claimAtual.larg = Math.max(CLAIM_LARG, claimAtual.raio * 2);
-      claimAtual.prof = Math.max(CLAIM_PROF, Math.round(claimAtual.raio * 1.4));
-      delete claimAtual.raio;
-    }
-    // Migracao: claim sem rotY ganha rotY alinhado com trilha
-    if (claimAtual.rotY === undefined) {
-      claimAtual.rotY = obterRotacaoAlinhada(claimAtual.x, claimAtual.z);
-    }
-    try { localStorage.setItem(CHAVE_CLAIM, JSON.stringify(claimAtual)); } catch (e) {}
-
-    construirCercaVisual(claimAtual.x, claimAtual.z, claimAtual.larg, claimAtual.prof, claimAtual.rotY);
-    // Limpa vegetacao residual ao recarregar
-    if (typeof limparVegetacaoRetanguloRotacionado === 'function') {
-      limparVegetacaoRetanguloRotacionado(
-        claimAtual.x, claimAtual.z,
-        claimAtual.larg - 1, claimAtual.prof - 1,
-        claimAtual.rotY
-      );
-    }
-  } catch (e) {
-    console.warn('Falha ao ler claim:', e);
+  construirCercaVisual(claimAtual.x, claimAtual.z, claimAtual.larg, claimAtual.prof, claimAtual.rotY);
+  if (typeof limparVegetacaoRetanguloRotacionado === 'function') {
+    limparVegetacaoRetanguloRotacionado(
+      claimAtual.x, claimAtual.z,
+      claimAtual.larg - 1, claimAtual.prof - 1,
+      claimAtual.rotY
+    );
   }
 }
 
-function tentarClaim() {
+async function tentarClaim() {
   if (claimAtual) {
     mostrarDica('Voce ja tem um terreno', 2500);
     return;
@@ -50,30 +33,26 @@ function tentarClaim() {
   var px = personagem.position.x;
   var pz = personagem.position.z;
 
-  // Nao deixa clamar em cima da trilha
   if (distanciaAteTrilha(px, pz) < 5) {
     mostrarDica('Saia da trilha para clamar terreno', 2500);
     return;
   }
 
-  // Calcula rotacao do terreno alinhada com a tangente da trilha mais proxima
   var rotY = obterRotacaoAlinhada(px, pz);
 
-  claimAtual = {
-    x: px, z: pz,
-    larg: CLAIM_LARG, prof: CLAIM_PROF,
-    rotY: rotY,
-    t: Date.now()
-  };
-
+  // Tenta clamar no servidor — pode falhar se outro jogador ja clamou ali
   try {
-    localStorage.setItem(CHAVE_CLAIM, JSON.stringify(claimAtual));
+    await apiSalvarClaim({
+      x: px, z: pz, larg: CLAIM_LARG, prof: CLAIM_PROF, rotY: rotY
+    });
   } catch (e) {
-    console.warn('Falha ao salvar claim:', e);
+    mostrarDica(e.message || 'Não foi possível clamar', 3500);
+    return;
   }
 
+  claimAtual = { x: px, z: pz, larg: CLAIM_LARG, prof: CLAIM_PROF, rotY: rotY, t: Date.now() };
+
   construirCercaVisual(px, pz, CLAIM_LARG, CLAIM_PROF, rotY);
-  // Limpa arvores e pedras dentro do retangulo (terra agora pertence ao jogador)
   if (typeof limparVegetacaoRetanguloRotacionado === 'function') {
     limparVegetacaoRetanguloRotacionado(px, pz, CLAIM_LARG - 1, CLAIM_PROF - 1, rotY);
   }

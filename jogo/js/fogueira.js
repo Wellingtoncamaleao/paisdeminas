@@ -11,47 +11,33 @@ function inicializarFogueiras() {
 }
 
 function carregarFogueirasSalvas() {
-  try {
-    var s = localStorage.getItem(CHAVE_FOGUEIRAS);
-    if (!s) return;
-    var lista = JSON.parse(s);
-    if (!Array.isArray(lista)) return;
-    for (var i = 0; i < lista.length; i++) {
-      var item = lista[i];
-      var grupo = criarFogueiraGrupo();
-      grupo.position.set(item.x, 0, item.z);
-      cena.add(grupo);
+  if (!window.estadoServidor || !window.estadoServidor.fogueiras) return;
+  var lista = window.estadoServidor.fogueiras;
+  for (var i = 0; i < lista.length; i++) {
+    var item = lista[i];
+    var grupo = criarFogueiraGrupo();
+    grupo.position.set(item.x, 0, item.z);
+    cena.add(grupo);
 
-      var f = {
-        x: item.x, z: item.z, mesh: grupo,
-        ativa: item.ativa !== false,
-        fase: Math.random() * 10
-      };
-      if (!f.ativa) apagarFogueiraVisual(f);
+    var f = {
+      id: item.id,
+      x: item.x, z: item.z, mesh: grupo,
+      ativa: item.ativa !== false,
+      fase: Math.random() * 10
+    };
+    if (!f.ativa) apagarFogueiraVisual(f);
 
-      fogueirasConstruidas.push(f);
-      // Obstaculo redondo pequeno — personagem nao atravessa a fogueira
-      arvoresPos.push({ x: item.x, z: item.z, raio: 0.7 });
-    }
-  } catch (e) {
-    console.warn('Falha ao carregar fogueiras:', e);
+    fogueirasConstruidas.push(f);
+    arvoresPos.push({ x: item.x, z: item.z, raio: 0.7 });
   }
 }
 
-function salvarFogueiras() {
-  var lista = fogueirasConstruidas.map(function(f) {
-    return { x: f.x, z: f.z, ativa: f.ativa };
-  });
-  try { localStorage.setItem(CHAVE_FOGUEIRAS, JSON.stringify(lista)); } catch (e) {}
-}
-
-// Adiciona uma fogueira recem-construida ao tracking
-function registrarFogueira(grupo, x, z) {
+// Adiciona fogueira recem-construida ao tracking. id vem da API.
+function registrarFogueira(grupo, x, z, id) {
   fogueirasConstruidas.push({
-    x: x, z: z, mesh: grupo, ativa: true, fase: Math.random() * 10
+    id: id, x: x, z: z, mesh: grupo, ativa: true, fase: Math.random() * 10
   });
   arvoresPos.push({ x: x, z: z, raio: 0.7 });
-  salvarFogueiras();
 }
 
 function atualizarFogueiras(delta) {
@@ -93,7 +79,6 @@ function atualizarFogueiras(delta) {
       if (typeof atualizarPilhas === 'function') atualizarPilhas();
       if (typeof salvarInventario === 'function') salvarInventario();
       if (algumaApagou) {
-        salvarFogueiras();
         if (typeof mostrarDica === 'function') {
           mostrarDica('Acabou a madeira — fogueira apagou', 2500);
         }
@@ -105,6 +90,10 @@ function atualizarFogueiras(delta) {
 function apagarFogueira(f) {
   f.ativa = false;
   apagarFogueiraVisual(f);
+  // Sincroniza com servidor (sem await — silencioso)
+  if (f.id && typeof apiSetFogueiraAtiva === 'function') {
+    apiSetFogueiraAtiva(f.id, false).catch(function() {});
+  }
 }
 
 function apagarFogueiraVisual(f) {
@@ -144,7 +133,9 @@ function tentarAcenderFogueiraProx(px, pz, raioInteracao) {
   if (alvo.mesh.userData.chama) alvo.mesh.userData.chama.visible = true;
   // Reseta o cronometro de consumo pra essa fogueira nao ser cobrada imediatamente
   ultimoConsumoFogueiraMs = performance.now();
-  salvarFogueiras();
+  if (alvo.id && typeof apiSetFogueiraAtiva === 'function') {
+    apiSetFogueiraAtiva(alvo.id, true).catch(function() {});
+  }
   if (typeof mostrarDica === 'function') mostrarDica('Fogueira acesa', 1800);
   return true;
 }

@@ -12,43 +12,31 @@ function inicializarConstrucao() {
 }
 
 function carregarCabanasSalvas() {
-  try {
-    var salvo = localStorage.getItem(CHAVE_CABANAS);
-    if (!salvo) return;
-    var lista = JSON.parse(salvo);
-    if (!Array.isArray(lista)) return;
-    for (var i = 0; i < lista.length; i++) {
-      var item = lista[i];
-      var fab = FABRICAS_CABANA[item.tipo];
-      if (!fab) continue;
-      var grupo = fab();
-      grupo.position.set(item.x, 0, item.z);
-      grupo.rotation.y = item.rotY || 0;
-      cena.add(grupo);
-      var cabanaCarregada = {
-        tipo: item.tipo, x: item.x, z: item.z, rotY: item.rotY, mesh: grupo,
-        raioColisao: grupo.userData.raioColisao
-      };
-      cabanasConstruidas.push(cabanaCarregada);
-      // Adiciona paredes como obstaculos (com abertura na porta)
-      var paredes = obterColisaoCabana(item.tipo, item.x, item.z, item.rotY || 0);
-      for (var pj = 0; pj < paredes.length; pj++) paredesCabana.push(paredes[pj]);
-      // Limpa arvores/pedras que estejam dentro do bbox da cabana (cabanas antigas tinham vegetacao presa)
-      if (typeof limparVegetacaoBboxCabana === 'function') {
-        limparVegetacaoBboxCabana(cabanaCarregada);
-      }
+  if (!window.estadoServidor || !window.estadoServidor.cabanas) return;
+  var lista = window.estadoServidor.cabanas;
+  for (var i = 0; i < lista.length; i++) {
+    var item = lista[i];
+    var fab = FABRICAS_CABANA[item.tipo];
+    if (!fab) continue;
+    var grupo = fab();
+    grupo.position.set(item.x, 0, item.z);
+    grupo.rotation.y = item.rotY || 0;
+    cena.add(grupo);
+    var cabanaCarregada = {
+      id: item.id,
+      tipo: item.tipo, x: item.x, z: item.z, rotY: item.rotY, mesh: grupo,
+      raioColisao: grupo.userData.raioColisao
+    };
+    cabanasConstruidas.push(cabanaCarregada);
+    var paredes = obterColisaoCabana(item.tipo, item.x, item.z, item.rotY || 0);
+    for (var pj = 0; pj < paredes.length; pj++) paredesCabana.push(paredes[pj]);
+    if (typeof limparVegetacaoBboxCabana === 'function') {
+      limparVegetacaoBboxCabana(cabanaCarregada);
     }
-  } catch (e) {
-    console.warn('Falha ao carregar cabanas:', e);
   }
 }
 
-function salvarCabanas() {
-  var lista = cabanasConstruidas.map(function(c) {
-    return { tipo: c.tipo, x: c.x, z: c.z, rotY: c.rotY };
-  });
-  try { localStorage.setItem(CHAVE_CABANAS, JSON.stringify(lista)); } catch (e) {}
-}
+// Salvar cabana é feito direto na confirmação via apiSalvarCabana — não há sync em batch.
 
 function conectarUiConstrucao() {
   // Botao X de fechar painel
@@ -235,7 +223,7 @@ function rotacionarFantasma() {
   cabanaFantasma.userData.rotY = cabanaFantasma.rotation.y;
 }
 
-function confirmarConstrucao() {
+async function confirmarConstrucao() {
   if (modoConstrucao !== 'posicionando' || !cabanaFantasma) return;
   if (!cabanaFantasma.userData.posicaoValida) {
     mostrarDica('Posição inválida — fora do terreno ou sobre outra cabana', 2500);
@@ -263,9 +251,19 @@ function confirmarConstrucao() {
   grupo.rotation.y = rotY;
   cena.add(grupo);
 
+  // Atualiza pilhas (gastou recursos)
+  if (typeof atualizarPilhas === 'function') atualizarPilhas();
+
   // Fogueira tem fluxo proprio (sem paredes, sem fumaca de chamine, com timer de consumo)
   if (tipo === 'fogueira') {
-    if (typeof registrarFogueira === 'function') registrarFogueira(grupo, x, z);
+    var idFog = null;
+    try {
+      var resp = await apiSalvarFogueira({ x: x, z: z });
+      idFog = resp.id;
+    } catch (e) {
+      mostrarDica('Erro ao salvar fogueira: ' + e.message, 3000);
+    }
+    if (typeof registrarFogueira === 'function') registrarFogueira(grupo, x, z, idFog);
     fecharBarraConstrucao();
     modoConstrucao = 'fechado';
     cabanaTipoAtual = null;
@@ -287,6 +285,11 @@ function confirmarConstrucao() {
   if (typeof limparVegetacaoBboxCabana === 'function') {
     limparVegetacaoBboxCabana(novaCabana);
   }
+
+  // Persiste no servidor (sem await pra nao travar UI; falha = jogador perde no proximo load mas nao pode-se fazer muito)
+  apiSalvarCabana({ tipo: tipo, x: x, z: z, rotY: rotY })
+    .then(function(resp) { novaCabana.id = resp.id; })
+    .catch(function(e) { console.warn('Falha ao salvar cabana:', e); });
 
   // Fumaca subindo da chamine (so cabana media e grande tem chamine)
   if (typeof adicionarFumacaPara === 'function') adicionarFumacaPara(grupo);

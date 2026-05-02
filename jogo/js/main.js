@@ -84,22 +84,57 @@ function animar() {
   atualizarFumaca(delta);
   atualizarFogueiras(delta);
   atualizarAudio(delta);
+  enviarPingPosicao();
 
   renderer.render(cena, camera);
 }
 
-// Botao "Comecar" — esconde tela inicial, inicia jogo, mostra mensagem de boas-vindas
+// Estado carregado do servidor antes do jogo iniciar
+window.estadoServidor = null;
+
+// Boot: tela login → tela inicial → jogo
 document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('btn-comecar').addEventListener('click', function() {
+  inicializarLogin();
+
+  document.getElementById('btn-comecar').addEventListener('click', async function() {
+    if (!window.session) {
+      mostrarMensagem('Faça login antes de começar.', 3000);
+      inicializarLogin();
+      return;
+    }
+    var btn = document.getElementById('btn-comecar');
+    btn.disabled = true;
+    btn.textContent = 'Carregando...';
+    try {
+      window.estadoServidor = await apiCarregarEstado();
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = 'Começar';
+      alert('Erro ao carregar estado do servidor: ' + e.message);
+      return;
+    }
+
     var telaInicial = document.getElementById('tela-inicial');
     telaInicial.classList.add('oculto');
 
     setTimeout(function() {
       iniciarJogo();
-      mostrarMensagem('Bem-vindo a Minas Gerais. Caminhe e escolha seu terreno.', 6000);
+      mostrarMensagem('Bem-vindo a Minas Gerais, ' + window.session.player.nome + '.', 5000);
     }, 300);
   });
 });
+
+// Ping de posicao no servidor a cada 2s (Fase 4.2 vai usar isso pra mostrar outros)
+var ultimoPing = 0;
+function enviarPingPosicao() {
+  if (!window.session || !personagem) return;
+  var agora = performance.now();
+  if (agora - ultimoPing < 2000) return;
+  ultimoPing = agora;
+  apiPingPosicao(
+    personagem.position.x, personagem.position.z, personagem.rotation.y
+  ).catch(function() {}); // silencioso — sem network nao quebra o jogo
+}
 
 function mostrarMensagem(texto, duracao) {
   var msg = document.getElementById('mensagem');
