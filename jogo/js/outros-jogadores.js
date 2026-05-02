@@ -115,7 +115,10 @@ function sincronizarClaims(lista) {
     if (!claimsOutros[c.id]) {
       var mesh = criarCercaSimplesParaOutro(c.x, c.z, c.larg, c.prof, c.rotY);
       cena.add(mesh);
-      claimsOutros[c.id] = { mesh: mesh };
+      // Guarda dados completos pra alinhamento de novos claims
+      claimsOutros[c.id] = {
+        mesh: mesh, x: c.x, z: c.z, larg: c.larg, prof: c.prof, rotY: c.rotY
+      };
 
       // Limpa vegetacao dentro do claim de outros (na primeira vez que vemos)
       if (typeof limparVegetacaoRetanguloRotacionado === 'function') {

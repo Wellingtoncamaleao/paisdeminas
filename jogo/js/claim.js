@@ -60,9 +60,16 @@ async function tentarClaim() {
   mostrarMensagem('Esta terra é sua. Colete madeira e pedra para construir.', 5500);
 }
 
-// Acha a tangente da trilha mais proxima e devolve a rotacao Y que alinha
-// o lado comprido (largura) do terreno com a direcao da trilha
+// Calcula rotacao Y do novo terreno:
+// 1) Se houver claim de OUTRO player perto (raio 35m), usa a mesma rotacao
+//    — terrenos vizinhos ficam paralelos, organizados como em uma vila.
+// 2) Senao, alinha com a tangente da trilha mais proxima.
 function obterRotacaoAlinhada(x, z) {
+  // 1. Vizinho mais proximo (claim de outro player)
+  var rotVizinho = rotYDeClaimVizinhoMaisProx(x, z, 35);
+  if (rotVizinho !== null) return rotVizinho;
+
+  // 2. Tangente da trilha
   if (typeof trilhaSpline === 'undefined' || !trilhaSpline) return 0;
   var menorDist = Infinity;
   var melhorT = 0;
@@ -78,8 +85,28 @@ function obterRotacaoAlinhada(x, z) {
     }
   }
   var tan = trilhaSpline.getTangent(melhorT);
-  // Largura local (eixo X) deve apontar pra direcao da trilha
   return Math.atan2(tan.z, tan.x);
+}
+
+// Acha o claim de outro jogador mais proximo dentro de raioBusca.
+// Retorna a rotY dele (pra alinhar) ou null se nao houver.
+function rotYDeClaimVizinhoMaisProx(x, z, raioBusca) {
+  if (typeof claimsOutros === 'undefined') return null;
+  var raio2 = raioBusca * raioBusca;
+  var menorDist2 = Infinity;
+  var melhorRotY = null;
+  for (var id in claimsOutros) {
+    var c = claimsOutros[id];
+    if (c.x === undefined || c.z === undefined) continue;
+    var dx = x - c.x;
+    var dz = z - c.z;
+    var d2 = dx * dx + dz * dz;
+    if (d2 < raio2 && d2 < menorDist2) {
+      menorDist2 = d2;
+      melhorRotY = c.rotY || 0;
+    }
+  }
+  return melhorRotY;
 }
 
 // Cerca minimalista — só 4 estacas grandes nos cantos. Sem cordinha (dá pra
