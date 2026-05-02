@@ -1,48 +1,46 @@
-// Tempo do jogo: 0..1 representa 1 dia inteiro
-// 0 = meia-noite, 0.25 = 6h (nascer do sol), 0.5 = meio-dia, 0.75 = 18h (pôr do sol)
-var tempoAtual = 0.30; // comeca em ~7h da manha
+// Tempo do MUNDO (compartilhado entre todos os jogadores)
+// 0 = meia-noite, 0.25 = 6h, 0.5 = meio-dia, 0.75 = 18h
+// Calculado deterministicamente a partir do timestamp UTC — todos os
+// browsers veem o mesmo horario (relogios sincronizados via NTP).
+var tempoAtual = 0;
 var DURACAO_DIA_S = 480; // 8 minutos reais = 1 dia no jogo
 var pausaTempo = false;
-var ultimoSalvarTempo = 0;
-var CHAVE_TEMPO = 'paisdeminas-tempo';
+var tempoCongeladoCliente = 0; // se pausa, congela a visualizacao DESTE cliente
+
+function calcularTempoMundo() {
+  var agoraSec = Date.now() / 1000;
+  return (agoraSec / DURACAO_DIA_S) % 1;
+}
 
 function inicializarTempo() {
-  try {
-    var s = localStorage.getItem(CHAVE_TEMPO);
-    if (s !== null) {
-      var v = parseFloat(s);
-      if (!isNaN(v) && v >= 0 && v <= 1) tempoAtual = v;
-    }
-  } catch (e) {}
+  tempoAtual = calcularTempoMundo();
 }
 
 function atualizarTempo(delta) {
-  if (!pausaTempo) {
-    tempoAtual += delta / DURACAO_DIA_S;
-    if (tempoAtual >= 1) tempoAtual -= 1;
-    salvarTempoLento();
+  if (pausaTempo) {
+    tempoAtual = tempoCongeladoCliente;
+  } else {
+    tempoAtual = calcularTempoMundo();
   }
 
-  // Aplica no mundo (sol, ceu, fog) e estrelas
   if (typeof aplicarTempoNoMundo === 'function') aplicarTempoNoMundo(tempoAtual);
   if (typeof atualizarEstrelas === 'function') atualizarEstrelas(tempoAtual);
   if (typeof atualizarLua === 'function') atualizarLua(tempoAtual);
   if (typeof atualizarRelogioHud === 'function') atualizarRelogioHud();
 }
 
-function salvarTempoLento() {
-  // Salva a cada 5s pra nao spammar localStorage
-  var agora = performance.now();
-  if (agora - ultimoSalvarTempo > 5000) {
-    try { localStorage.setItem(CHAVE_TEMPO, String(tempoAtual)); } catch (e) {}
-    ultimoSalvarTempo = agora;
-  }
-}
-
 function togglePausaTempo() {
   pausaTempo = !pausaTempo;
+  if (pausaTempo) {
+    tempoCongeladoCliente = calcularTempoMundo();
+  }
   if (typeof mostrarDica === 'function') {
-    mostrarDica(pausaTempo ? 'Tempo pausado' : 'Tempo ativo', 1500);
+    mostrarDica(
+      pausaTempo
+        ? 'Tempo congelado (só pra você — mundo continua)'
+        : 'Tempo voltou ao do mundo',
+      2200
+    );
   }
 }
 
