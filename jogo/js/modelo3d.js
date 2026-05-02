@@ -29,17 +29,37 @@ function carregarModeloColono() {
   });
 }
 
-// Cria nova instancia do colono — clona scene + skeleton, cria mixer/actions
+// Cria nova instancia do colono — clona scene + skeleton, cria mixer/actions.
+// corCamisa diferencia visualmente players: substitui MeshPhysicalMaterial PBR
+// por MeshLambertMaterial mantendo a texture (mapa de cor) original mas
+// aplicando color tint. MeshPhysicalMaterial.color tem efeito quase nulo com
+// PBR completo; Lambert respeita color * map. Tint afeta o avatar inteiro
+// (chapeu, camisa, calca) com mesma vibe colorida — bom pra distinguir players.
 function criarColonoComAnimacao(corCamisa) {
   if (!window.modeloColonoGLB) throw new Error('Modelo nao carregado');
   var grupo = new THREE.Group();
   var skinned = window.cloneSkeleton(window.modeloColonoGLB.scene);
-  // Soldier.glb tem altura ~1.7m, escala default ja boa pro jogo
   skinned.position.y = 0;
+
+  var corHex = (typeof corCamisa === 'number') ? corCamisa : 0x7a4a26;
+  var corPlayer = new THREE.Color(corHex);
+
   skinned.traverse(function(o) {
     if (o.isMesh) {
       o.castShadow = true;
       o.frustumCulled = false; // evita sumir em poses extremas
+      if (o.material) {
+        var origs = Array.isArray(o.material) ? o.material : [o.material];
+        var lamberts = origs.map(function(m) {
+          var mat = new THREE.MeshLambertMaterial({
+            map: m.map || null,
+            color: corPlayer.clone(),
+            skinning: true
+          });
+          return mat;
+        });
+        o.material = lamberts.length === 1 ? lamberts[0] : lamberts;
+      }
     }
   });
   grupo.add(skinned);

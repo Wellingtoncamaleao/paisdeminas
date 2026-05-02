@@ -18,7 +18,13 @@ var CORES_COLONO = {
 
 function iniciarPersonagem() {
   // O modelo deve ter sido pre-carregado em main.js antes de chamar isso
-  personagem = criarColonoComAnimacao(CORES_COLONO.camisa);
+  var corHex = CORES_COLONO.camisa;
+  if (window.session && window.session.player && window.session.player.cor_camisa
+      && typeof corHslParaHex === 'function') {
+    var c = corHslParaHex(window.session.player.cor_camisa);
+    if (c) corHex = c;
+  }
+  personagem = criarColonoComAnimacao(corHex);
   personagem.position.set(-160, 0, -160);
   personagem.rotation.y = Math.PI / 4;
   cena.add(personagem);
