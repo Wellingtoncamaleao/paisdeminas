@@ -68,44 +68,49 @@ function criarCorpoColono(corCamisa) {
   cabelo.castShadow = true;
   corpoGrupo.add(cabelo);
 
-  // Barba — cone mais largo pra ser visivel de longe
-  var barba = new THREE.Mesh(
-    new THREE.ConeGeometry(0.16, 0.20, 8),
-    new THREE.MeshLambertMaterial({ color: corBarba })
-  );
-  barba.position.set(0, 1.50, 0.10);
+  // Barba farta — cobre queixo e parte das bochechas
+  var matBarba = new THREE.MeshLambertMaterial({ color: corBarba });
+  var barba = new THREE.Mesh(new THREE.ConeGeometry(0.21, 0.30, 10), matBarba);
+  barba.position.set(0, 1.51, 0.05);
   barba.rotation.x = Math.PI;
-  barba.scale.z = 0.7;
+  barba.scale.set(1.0, 1.0, 0.55);
   corpoGrupo.add(barba);
 
-  // Olhos — 2 esferinhas pretas
+  // Bigode — pequeno box escuro acima da barba
+  var bigode = new THREE.Mesh(
+    new THREE.BoxGeometry(0.13, 0.025, 0.04),
+    matBarba
+  );
+  bigode.position.set(0, 1.585, 0.215);
+  corpoGrupo.add(bigode);
+
+  // Olhos — esferinhas pretas projetadas (z fora da esfera)
   var matOlho = new THREE.MeshLambertMaterial({ color: 0x1a0d05 });
-  var olhoGeo = new THREE.SphereGeometry(0.025, 8, 6);
+  var olhoGeo = new THREE.SphereGeometry(0.032, 8, 6);
   var olhoEsq = new THREE.Mesh(olhoGeo, matOlho);
-  olhoEsq.position.set(0.07, 1.65, 0.20);
+  olhoEsq.position.set(0.075, 1.66, 0.215);
   corpoGrupo.add(olhoEsq);
   var olhoDir = new THREE.Mesh(olhoGeo, matOlho);
-  olhoDir.position.set(-0.07, 1.65, 0.20);
+  olhoDir.position.set(-0.075, 1.66, 0.215);
   corpoGrupo.add(olhoDir);
 
-  // Sobrancelhas — 2 boxes finas escuras
-  var matSobr = new THREE.MeshLambertMaterial({ color: corBarba });
-  var sobrGeo = new THREE.BoxGeometry(0.06, 0.012, 0.025);
-  var sobrEsq = new THREE.Mesh(sobrGeo, matSobr);
-  sobrEsq.position.set(0.07, 1.69, 0.205);
-  sobrEsq.rotation.z = -0.1;
+  // Sobrancelhas grossas
+  var sobrGeo = new THREE.BoxGeometry(0.085, 0.022, 0.04);
+  var sobrEsq = new THREE.Mesh(sobrGeo, matBarba);
+  sobrEsq.position.set(0.078, 1.71, 0.21);
+  sobrEsq.rotation.z = -0.18;
   corpoGrupo.add(sobrEsq);
-  var sobrDir = new THREE.Mesh(sobrGeo, matSobr);
-  sobrDir.position.set(-0.07, 1.69, 0.205);
-  sobrDir.rotation.z = 0.1;
+  var sobrDir = new THREE.Mesh(sobrGeo, matBarba);
+  sobrDir.position.set(-0.078, 1.71, 0.21);
+  sobrDir.rotation.z = 0.18;
   corpoGrupo.add(sobrDir);
 
-  // Nariz — cone pequeno cor de pele
+  // Nariz — cone pele projetado
   var nariz = new THREE.Mesh(
-    new THREE.ConeGeometry(0.025, 0.06, 6),
+    new THREE.ConeGeometry(0.035, 0.08, 6),
     new THREE.MeshLambertMaterial({ color: 0xc07850 })
   );
-  nariz.position.set(0, 1.60, 0.22);
+  nariz.position.set(0, 1.625, 0.245);
   nariz.rotation.x = Math.PI / 2;
   corpoGrupo.add(nariz);
 
