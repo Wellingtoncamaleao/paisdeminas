@@ -6,6 +6,20 @@ var corpoGrupo; // contem todas as partes — recebe bobbing vertical
 var bracoEsq, bracoDir, pernaEsq, pernaDir; // grupos pivot pra rotacao
 var fasePasso = 0;
 
+// Paleta global do colono (usada por iniciarPersonagem e criarMembro)
+var CORES_COLONO = {
+  pele: 0xd49060,
+  camisa: 0x7a4a26,
+  calca: 0x3d2812,
+  chapeu: 0xc8a060,
+  barba: 0x3a2010,
+  bota: 0x2a1808,
+  cabelo: 0x2a1810,
+  cinto: 0x4a2812,
+  sandalia: 0x6a3818,
+  manga: 0x5a3818
+};
+
 function iniciarPersonagem() {
   personagem = new THREE.Group();
 
@@ -13,13 +27,13 @@ function iniciarPersonagem() {
   corpoGrupo = new THREE.Group();
   personagem.add(corpoGrupo);
 
-  // Cores do colono 1500
-  var corPele = 0xd49060;
-  var corCamisa = 0x7a4a26;
-  var corCalca = 0x3d2812;
-  var corChapeu = 0xc8a060;
-  var corBarba = 0x3a2010;
-  var corBota = 0x2a1808;
+  var corPele = CORES_COLONO.pele;
+  var corCamisa = CORES_COLONO.camisa;
+  var corCalca = CORES_COLONO.calca;
+  var corChapeu = CORES_COLONO.chapeu;
+  var corBarba = CORES_COLONO.barba;
+  var corCabelo = CORES_COLONO.cabelo;
+  var corCinto = CORES_COLONO.cinto;
 
   // === Tronco — capsule marrom (camisa) ===
   var troncoGeo = new THREE.CapsuleGeometry(0.28, 0.55, 4, 8);
@@ -36,6 +50,15 @@ function iniciarPersonagem() {
   cabeca.position.y = 1.62;
   cabeca.castShadow = true;
   corpoGrupo.add(cabeca);
+
+  // Cabelo — hemisferio achatado embaixo do chapeu, aparece nas laterais e atras
+  var cabeloGeo = new THREE.SphereGeometry(0.235, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+  var cabeloMat = new THREE.MeshLambertMaterial({ color: corCabelo });
+  var cabelo = new THREE.Mesh(cabeloGeo, cabeloMat);
+  cabelo.position.y = 1.66;
+  cabelo.scale.y = 0.7;
+  cabelo.castShadow = true;
+  corpoGrupo.add(cabelo);
 
   // Barba — cone curto cinza-escuro pendurado da cabeca
   var barbaGeo = new THREE.ConeGeometry(0.14, 0.18, 8);
@@ -59,6 +82,21 @@ function iniciarPersonagem() {
   aba.castShadow = true;
   corpoGrupo.add(aba);
 
+  // Cinturao — cilindro fino marrom escuro na cintura
+  var cintoGeo = new THREE.CylinderGeometry(0.32, 0.32, 0.1, 16);
+  var cintoMat = new THREE.MeshLambertMaterial({ color: corCinto });
+  var cinto = new THREE.Mesh(cintoGeo, cintoMat);
+  cinto.position.y = 0.88;
+  cinto.castShadow = true;
+  corpoGrupo.add(cinto);
+
+  // Fivela do cinto — pequeno cubo dourado claro no centro frontal
+  var fivelaGeo = new THREE.BoxGeometry(0.08, 0.08, 0.04);
+  var fivelaMat = new THREE.MeshLambertMaterial({ color: 0xa68040 });
+  var fivela = new THREE.Mesh(fivelaGeo, fivelaMat);
+  fivela.position.set(0, 0.88, 0.32);
+  corpoGrupo.add(fivela);
+
   // === Bracos: groups com pivot no ombro, cilindro pendurado ===
   bracoEsq = criarMembro(0.06, 0.55, corCamisa, corPele, true);
   bracoEsq.position.set(0.32, 1.32, 0);
@@ -69,11 +107,11 @@ function iniciarPersonagem() {
   corpoGrupo.add(bracoDir);
 
   // === Pernas: groups com pivot no quadril ===
-  pernaEsq = criarMembro(0.09, 0.65, corCalca, corBota, false);
+  pernaEsq = criarMembro(0.09, 0.65, corCalca, CORES_COLONO.bota, false);
   pernaEsq.position.set(0.13, 0.7, 0);
   corpoGrupo.add(pernaEsq);
 
-  pernaDir = criarMembro(0.09, 0.65, corCalca, corBota, false);
+  pernaDir = criarMembro(0.09, 0.65, corCalca, CORES_COLONO.bota, false);
   pernaDir.position.set(-0.13, 0.7, 0);
   corpoGrupo.add(pernaDir);
 
@@ -85,7 +123,7 @@ function iniciarPersonagem() {
 }
 
 // Helper: cria um membro (braco ou perna) como Group com pivot no topo,
-// cilindro pendurado pra baixo + esfera na ponta (mao ou pe)
+// cilindro pendurado pra baixo + esfera/sandalia na ponta
 function criarMembro(raio, comprimento, corCorpo, corPonta, ehBraco) {
   var grupo = new THREE.Group();
 
@@ -97,19 +135,40 @@ function criarMembro(raio, comprimento, corCorpo, corPonta, ehBraco) {
   membro.castShadow = true;
   grupo.add(membro);
 
-  // Mao ou pe na ponta
-  var pontaGeo = ehBraco
-    ? new THREE.SphereGeometry(raio * 1.1, 8, 6)
-    : new THREE.BoxGeometry(raio * 2.2, raio * 1.2, raio * 3.2);
-  var pontaMat = new THREE.MeshLambertMaterial({ color: corPonta });
-  var ponta = new THREE.Mesh(pontaGeo, pontaMat);
+  // Manga / detalhe (so braco) — anel mais escuro perto do ombro
   if (ehBraco) {
-    ponta.position.y = -comprimento - raio * 0.5;
-  } else {
-    ponta.position.set(0, -comprimento - raio * 0.4, raio * 0.6);
+    var mangaGeo = new THREE.CylinderGeometry(raio * 1.1, raio * 1.1, raio * 0.6, 8);
+    var mangaMat = new THREE.MeshLambertMaterial({ color: CORES_COLONO.manga });
+    var manga = new THREE.Mesh(mangaGeo, mangaMat);
+    manga.position.y = -raio * 0.4;
+    manga.castShadow = true;
+    grupo.add(manga);
   }
-  ponta.castShadow = true;
-  grupo.add(ponta);
+
+  if (ehBraco) {
+    // Mao — esfera pequena
+    var maoGeo = new THREE.SphereGeometry(raio * 1.1, 8, 6);
+    var maoMat = new THREE.MeshLambertMaterial({ color: corPonta });
+    var mao = new THREE.Mesh(maoGeo, maoMat);
+    mao.position.y = -comprimento - raio * 0.5;
+    mao.castShadow = true;
+    grupo.add(mao);
+  } else {
+    // Sandalia — solinho achatado + faixa de couro por cima
+    var sandaliaSolGeo = new THREE.BoxGeometry(raio * 2.2, raio * 0.5, raio * 3.0);
+    var sandaliaSolMat = new THREE.MeshLambertMaterial({ color: CORES_COLONO.sandalia });
+    var sandaliaSol = new THREE.Mesh(sandaliaSolGeo, sandaliaSolMat);
+    sandaliaSol.position.set(0, -comprimento - raio * 0.25, raio * 0.6);
+    sandaliaSol.castShadow = true;
+    grupo.add(sandaliaSol);
+    // Faixa de couro
+    var faixaGeo = new THREE.BoxGeometry(raio * 2.0, raio * 0.7, raio * 0.6);
+    var faixaMat = new THREE.MeshLambertMaterial({ color: CORES_COLONO.bota });
+    var faixa = new THREE.Mesh(faixaGeo, faixaMat);
+    faixa.position.set(0, -comprimento + raio * 0.2, raio * 0.4);
+    faixa.castShadow = true;
+    grupo.add(faixa);
+  }
 
   return grupo;
 }

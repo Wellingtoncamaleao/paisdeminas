@@ -27,7 +27,7 @@ function iniciarJogo() {
 
   // Tone mapping cinematografico (color grading suave dourado)
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = 1.25;
 
   relogio = new THREE.Clock();
 
@@ -49,6 +49,8 @@ function iniciarJogo() {
   atualizarPilhas();
   // Fase 3: construcao de cabanas
   inicializarConstrucao();
+  // Fase 3.1: fumaca das chamines das cabanas existentes
+  inicializarFumaca();
   // Controles touch (auto-detecta mobile)
   inicializarTouch();
 
@@ -74,6 +76,7 @@ function animar() {
   atualizarSombra();
   atualizarVento(delta);
   atualizarConstrucao(delta);
+  atualizarFumaca(delta);
   atualizarAudio(delta);
 
   renderer.render(cena, camera);

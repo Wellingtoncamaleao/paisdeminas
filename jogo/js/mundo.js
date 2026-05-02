@@ -8,9 +8,12 @@ function iniciarMundo() {
   // Neblina mais branda — so esconde os limites longes
   cena.fog = new THREE.Fog(0xe8a872, 70, 260);
 
-  // Terreno — plano grande verde
+  // Terreno — plano grande com textura de grama proceduralmente gerada
   var terrenoGeo = new THREE.PlaneGeometry(420, 420, 1, 1);
-  var terrenoMat = new THREE.MeshLambertMaterial({ color: 0x3d5e2e });
+  var terrenoMat = new THREE.MeshLambertMaterial({
+    color: 0xffffff,
+    map: texturaGrama()
+  });
   terrenoMesh = new THREE.Mesh(terrenoGeo, terrenoMat);
   terrenoMesh.rotation.x = -Math.PI / 2;
   terrenoMesh.position.y = 0;
@@ -22,19 +25,19 @@ function iniciarMundo() {
   cena.add(luzAmbiente);
 
   // Sol — direcional baixo no horizonte, dourado, projetando sombras
-  var sol = new THREE.DirectionalLight(0xffd4a3, 1.5);
+  var sol = new THREE.DirectionalLight(0xffd4a3, 1.85);
   sol.position.set(80, 60, 50);
   sol.castShadow = true;
   // Frustum da camera de sombra — cobre area razoavel ao redor do jogador
-  // (Three.js renderiza shadow apenas dentro deste box; perto = qualidade, longe = perf)
   sol.shadow.camera.left = -45;
   sol.shadow.camera.right = 45;
   sol.shadow.camera.top = 45;
   sol.shadow.camera.bottom = -45;
   sol.shadow.camera.near = 1;
   sol.shadow.camera.far = 180;
-  sol.shadow.mapSize.width = 1024;
-  sol.shadow.mapSize.height = 1024;
+  // Sombras maiores pra mais nitidez (1024 → 2048; 4096 e pesado em mobile)
+  sol.shadow.mapSize.width = 2048;
+  sol.shadow.mapSize.height = 2048;
   sol.shadow.bias = -0.0005;
   cena.add(sol);
   cena.add(sol.target); // necessario pra mover o foco da sombra com o jogador

@@ -24,8 +24,12 @@ function criarArvoresAltas() {
   var copaGeo = new THREE.ConeGeometry(2.0, 5.5, 7);
   copaGeo.translate(0, 6.5, 0);
 
-  var troncoMat = new THREE.MeshLambertMaterial({ color: 0x4a2f1a });
-  var copaMat = new THREE.MeshLambertMaterial({ color: 0x2d4a1f });
+  var troncoMat = new THREE.MeshLambertMaterial({
+    color: 0x6a4a30, map: texturaCasca()
+  });
+  var copaMat = new THREE.MeshLambertMaterial({
+    color: 0x6a8a3a, map: texturaFolhagem()
+  });
 
   var troncos = new THREE.InstancedMesh(troncoGeo, troncoMat, total);
   var copas = new THREE.InstancedMesh(copaGeo, copaMat, total);
@@ -47,8 +51,12 @@ function criarArvoresLargas() {
   copaGeo.scale(1.2, 0.85, 1.2);
   copaGeo.translate(0, 4.5, 0);
 
-  var troncoMat = new THREE.MeshLambertMaterial({ color: 0x5a3a22 });
-  var copaMat = new THREE.MeshLambertMaterial({ color: 0x3d6628, flatShading: true });
+  var troncoMat = new THREE.MeshLambertMaterial({
+    color: 0x7a5230, map: texturaCasca()
+  });
+  var copaMat = new THREE.MeshLambertMaterial({
+    color: 0x7a9a4a, map: texturaFolhagem(), flatShading: true
+  });
 
   var troncos = new THREE.InstancedMesh(troncoGeo, troncoMat, total);
   var copas = new THREE.InstancedMesh(copaGeo, copaMat, total);
@@ -133,7 +141,9 @@ function preencherArvores(meshA, meshB, total, raioColisao, escMin, distMinTrilh
 function criarPedras() {
   var total = 140;
   var geo = new THREE.DodecahedronGeometry(0.5);
-  var mat = new THREE.MeshLambertMaterial({ color: 0x6e6e6e, flatShading: true });
+  var mat = new THREE.MeshLambertMaterial({
+    color: 0xa0a0a0, map: texturaPedra(), flatShading: true
+  });
   var pedras = new THREE.InstancedMesh(geo, mat, total);
   pedras.castShadow = true;
   pedras.receiveShadow = true;

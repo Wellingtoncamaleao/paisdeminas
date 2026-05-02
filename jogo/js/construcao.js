@@ -221,6 +221,9 @@ function confirmarConstrucao() {
   // Adiciona como obstaculo de colisao
   arvoresPos.push({ x: x, z: z, raio: grupo.userData.raioColisao });
 
+  // Fumaca subindo da chamine (so cabana media e grande tem chamine)
+  if (typeof adicionarFumacaPara === 'function') adicionarFumacaPara(grupo);
+
   salvarCabanas();
   fecharBarraConstrucao();
   modoConstrucao = 'fechado';

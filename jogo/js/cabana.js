@@ -2,14 +2,37 @@
 // Cada funcao retorna um THREE.Group ja montado e centrado em (0,0,0)
 // Materiais sao reutilizados entre cabanas pra reduzir alocacoes
 
-var matMadeiraClara = new THREE.MeshLambertMaterial({ color: 0x9c6a3a });
-var matMadeiraEscura = new THREE.MeshLambertMaterial({ color: 0x5a3820 });
-var matTelhadoPalha = new THREE.MeshLambertMaterial({ color: 0xa67e3c, flatShading: true });
-var matPedra = new THREE.MeshLambertMaterial({ color: 0x6e6a64, flatShading: true });
-var matJanela = new THREE.MeshLambertMaterial({ color: 0xc8d8e8, emissive: 0x443322, emissiveIntensity: 0.15 });
-var matPorta = new THREE.MeshLambertMaterial({ color: 0x3d2010 });
+// Materiais texturizados — usam texturas procedurais geradas em texturas.js
+// Lazy init: criam na primeira chamada (texturas.js precisa estar carregado)
+var matMadeiraClara = null;
+var matMadeiraEscura = null;
+var matTelhadoPalha = null;
+var matPedra = null;
+var matJanela = null;
+var matPorta = null;
+
+function inicializarMateriaisCabana() {
+  if (matMadeiraClara) return; // ja iniciado
+  matMadeiraClara = new THREE.MeshLambertMaterial({
+    color: 0xc89060, map: texturaMadeira()
+  });
+  matMadeiraEscura = new THREE.MeshLambertMaterial({
+    color: 0x8a5028, map: texturaMadeira()
+  });
+  matTelhadoPalha = new THREE.MeshLambertMaterial({
+    color: 0xc89058, map: texturaPalha(), flatShading: true
+  });
+  matPedra = new THREE.MeshLambertMaterial({
+    color: 0xa0a0a0, map: texturaPedra(), flatShading: true
+  });
+  matJanela = new THREE.MeshLambertMaterial({
+    color: 0xc8d8e8, emissive: 0x443322, emissiveIntensity: 0.2
+  });
+  matPorta = new THREE.MeshLambertMaterial({ color: 0x3d2010 });
+}
 
 function criarCabanaPequena() {
+  inicializarMateriaisCabana();
   var grupo = new THREE.Group();
   grupo.userData.tipo = 'pequena';
   grupo.userData.raioColisao = 3.0;
@@ -26,6 +49,7 @@ function criarCabanaPequena() {
 }
 
 function criarCabanaMedia() {
+  inicializarMateriaisCabana();
   var grupo = new THREE.Group();
   grupo.userData.tipo = 'media';
   grupo.userData.raioColisao = 4.5;
@@ -42,6 +66,7 @@ function criarCabanaMedia() {
 }
 
 function criarCabanaGrande() {
+  inicializarMateriaisCabana();
   var grupo = new THREE.Group();
   grupo.userData.tipo = 'grande';
   grupo.userData.raioColisao = 6.0;
