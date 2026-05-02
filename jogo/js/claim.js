@@ -30,7 +30,7 @@ function tentarClaim() {
     return;
   }
 
-  var raio = 8;
+  var raio = 12;
   claimAtual = { x: px, z: pz, raio: raio, t: Date.now() };
 
   try {

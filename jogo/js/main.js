@@ -47,6 +47,8 @@ function iniciarJogo() {
   inicializarColeta();
   // Materializa as pilhas se ja houver claim+inventario salvos
   atualizarPilhas();
+  // Fase 3: construcao de cabanas
+  inicializarConstrucao();
   // Controles touch (auto-detecta mobile)
   inicializarTouch();
 
@@ -71,6 +73,7 @@ function animar() {
   atualizarCeu();
   atualizarSombra();
   atualizarVento(delta);
+  atualizarConstrucao(delta);
   atualizarAudio(delta);
 
   renderer.render(cena, camera);

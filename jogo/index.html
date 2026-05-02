@@ -28,6 +28,34 @@
     <p>Este jogo é jogado na horizontal</p>
   </div>
 
+  <div id="painel-construcao" class="oculto">
+    <button id="fechar-construcao" class="x-fechar" aria-label="Fechar">×</button>
+    <h2>Escolha sua construção</h2>
+    <div class="cards-construcao">
+      <div class="card-cabana" data-tipo="pequena">
+        <h3>Cabana Pequena</h3>
+        <p class="custo">22 madeira</p>
+        <button class="btn-card">Construir</button>
+      </div>
+      <div class="card-cabana" data-tipo="media">
+        <h3>Cabana Média</h3>
+        <p class="custo">50 madeira + 10 pedra</p>
+        <button class="btn-card">Construir</button>
+      </div>
+      <div class="card-cabana" data-tipo="grande">
+        <h3>Cabana Grande</h3>
+        <p class="custo">100 madeira + 30 pedra</p>
+        <button class="btn-card">Construir</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="barra-construcao" class="oculto">
+    <button id="rotacionar-cabana" class="btn-construcao">Rotacionar</button>
+    <button id="confirmar-cabana" class="btn-construcao btn-primary">Confirmar</button>
+    <button id="cancelar-cabana" class="btn-construcao">Cancelar</button>
+  </div>
+
   <canvas id="canvas-jogo"></canvas>
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
@@ -46,6 +74,8 @@
   <script src="js/coleta.js?v=__BUILD__"></script>
   <script src="js/pilhas.js?v=__BUILD__"></script>
   <script src="js/touch.js?v=__BUILD__"></script>
+  <script src="js/cabana.js?v=__BUILD__"></script>
+  <script src="js/construcao.js?v=__BUILD__"></script>
   <script src="js/main.js?v=__BUILD__"></script>
 </body>
 </html>

@@ -57,7 +57,7 @@ function criarUiTouch() {
   bindBotaoTap('btn-coletar', function() { if (typeof tentarColeta === 'function') tentarColeta(); });
   bindBotaoTap('btn-clamar', function() { if (typeof tentarClaim === 'function') tentarClaim(); });
   bindBotaoTap('btn-construir', function() {
-    mostrarDica('Construção em breve (Fase 3)', 2000);
+    if (typeof entrarModoConstrucao === 'function') entrarModoConstrucao();
   });
   bindBotaoTap('btn-camera', function() {
     if (typeof proximoPresetCamera === 'function') proximoPresetCamera();

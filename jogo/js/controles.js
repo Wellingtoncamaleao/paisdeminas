@@ -14,6 +14,10 @@ function iniciarControles() {
       if (e.code === 'KeyC' && typeof tentarClaim === 'function') tentarClaim();
       if (e.code === 'KeyE' && typeof tentarColeta === 'function') tentarColeta();
       if (e.code === 'KeyV' && typeof proximoPresetCamera === 'function') proximoPresetCamera();
+      if (e.code === 'KeyB' && typeof entrarModoConstrucao === 'function') entrarModoConstrucao();
+      if (e.code === 'KeyR' && modoConstrucao === 'posicionando') rotacionarFantasma();
+      if (e.code === 'Enter' && modoConstrucao === 'posicionando') confirmarConstrucao();
+      if (e.code === 'Escape' && modoConstrucao !== 'fechado') cancelarConstrucao();
     }
     teclas[e.code] = true;
   });

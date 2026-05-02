@@ -22,6 +22,23 @@ function adicionarRecurso(tipo, qtd) {
   if (typeof atualizarPilhas === 'function') atualizarPilhas();
 }
 
+// Tenta gastar recursos. Retorna true se conseguiu, false se nao tem o suficiente.
+// custos: { madeira: N, pedra: M }
+function gastarRecursos(custos) {
+  // Verifica primeiro
+  for (var tipo in custos) {
+    if ((inventario[tipo] || 0) < custos[tipo]) return false;
+  }
+  // Desconta
+  for (var tipo2 in custos) {
+    inventario[tipo2] -= custos[tipo2];
+  }
+  salvarInventario();
+  if (typeof atualizarHudInventario === 'function') atualizarHudInventario();
+  if (typeof atualizarPilhas === 'function') atualizarPilhas();
+  return true;
+}
+
 function salvarInventario() {
   try {
     localStorage.setItem(CHAVE_INV, JSON.stringify(inventario));
