@@ -43,24 +43,27 @@ function criarColonoComAnimacao(corCamisa) {
 
   var corHex = (typeof corCamisa === 'number') ? corCamisa : 0x7a4a26;
   var corPlayer = new THREE.Color(corHex);
+  // Tint SUTIL: 80% branco + 20% cor do player. Preserva luminosidade da
+  // textura Meshy (que ja tem cores ricas) e so adiciona uma "vibe" colorida.
+  var corTint = new THREE.Color(0xffffff).lerp(corPlayer, 0.22);
+  // Emissive mais forte da cor do player pra dar "banho de luz" + diferenciacao.
+  var corEmissive = corPlayer.clone().multiplyScalar(0.28);
 
   skinned.traverse(function(o) {
     if (o.isMesh) {
       o.castShadow = true;
-      o.frustumCulled = false; // evita sumir em poses extremas
+      o.frustumCulled = false;
       if (o.material) {
         var origs = Array.isArray(o.material) ? o.material : [o.material];
         var novos = origs.map(function(m) {
-          // MeshStandardMaterial com emissive sutil garante visibilidade mesmo
-          // em sombra/noite (Lambert puro fica preto sem DirectionalLight).
-          // Color afeta + map preserva textura. Emissive = cor*0.18 evita "preto".
           if (m.map) m.map.colorSpace = THREE.SRGBColorSpace;
           var mat = new THREE.MeshStandardMaterial({
             map: m.map || null,
-            color: corPlayer.clone(),
-            emissive: corPlayer.clone().multiplyScalar(0.18),
+            color: corTint,
+            emissive: corEmissive,
             emissiveMap: m.map || null,
-            roughness: 0.85,
+            emissiveIntensity: 0.55,
+            roughness: 0.7,
             metalness: 0.0
           });
           return mat;
