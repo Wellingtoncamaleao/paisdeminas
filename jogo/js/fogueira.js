@@ -61,7 +61,8 @@ function atualizarFogueiras(delta) {
     if (!f.ativa) continue;
     f.fase += delta;
     var oscEsc = 0.85 + Math.sin(f.fase * 9) * 0.12 + Math.sin(f.fase * 14) * 0.05;
-    var oscLuz = 1.2 + Math.sin(f.fase * 7) * 0.3 + Math.sin(f.fase * 11) * 0.15;
+    // Luz oscila entre ~20 e ~32 simulando chama tremulando
+    var oscLuz = 25 + Math.sin(f.fase * 7) * 5 + Math.sin(f.fase * 11) * 3;
     if (f.mesh.userData.chama) {
       f.mesh.userData.chama.scale.set(oscEsc, oscEsc * 1.15, oscEsc);
     }

@@ -299,9 +299,11 @@ function criarFogueiraGrupo() {
   grupo.add(chama);
   grupo.userData.chama = chama;
 
-  // Luz da fogueira — ponto laranja, raio razoavel pra iluminar arredores
-  var luz = new THREE.PointLight(0xff7720, 1.4, 16, 1.6);
-  luz.position.set(0, 1.0, 0);
+  // Luz da fogueira — ponto laranja-vermelho, raio razoavel
+  // Intensidade alta pq Three.js r155+ usa decay fisicamente correto (decay=2)
+  // Setamos decay=1 (linear) pra ficar mais visivel/fake-game, intensity 25 base
+  var luz = new THREE.PointLight(0xff7720, 25, 22, 1.0);
+  luz.position.set(0, 1.2, 0);
   grupo.add(luz);
   grupo.userData.luz = luz;
 
