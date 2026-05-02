@@ -182,12 +182,14 @@ function atualizarConstrucao(delta) {
 }
 
 function posicaoValida(x, z, raio) {
-  // Tem que estar dentro do claim
+  // Tem que estar dentro do claim (retangular)
   if (!claimAtual) return false;
+  var halfL = (claimAtual.larg || (claimAtual.raio * 2) || 24) / 2;
+  var halfP = (claimAtual.prof || (claimAtual.raio * 1.4) || 16) / 2;
   var dx = x - claimAtual.x;
   var dz = z - claimAtual.z;
-  var distClaim = Math.sqrt(dx * dx + dz * dz);
-  if (distClaim + raio > claimAtual.raio - 0.5) return false;
+  if (Math.abs(dx) + raio > halfL - 0.3) return false;
+  if (Math.abs(dz) + raio > halfP - 0.3) return false;
 
   // Nao pode sobrepor outra cabana
   for (var i = 0; i < cabanasConstruidas.length; i++) {

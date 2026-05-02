@@ -102,7 +102,23 @@ function removerPedra(ped) {
   if (i >= 0) pedrasPos.splice(i, 1);
 }
 
-// Limpa todas as arvores e pedras dentro de um circulo (usado no claim)
+// Limpa arvores e pedras dentro de um retangulo alinhado aos eixos (usado no claim retangular)
+function limparVegetacaoRetangulo(cx, cz, larg, prof) {
+  var halfL = larg / 2;
+  var halfP = prof / 2;
+  for (var i = arvoresPos.length - 1; i >= 0; i--) {
+    var dx = arvoresPos[i].x - cx;
+    var dz = arvoresPos[i].z - cz;
+    if (Math.abs(dx) < halfL && Math.abs(dz) < halfP) removerArvore(arvoresPos[i]);
+  }
+  for (var j = pedrasPos.length - 1; j >= 0; j--) {
+    var dx2 = pedrasPos[j].x - cx;
+    var dz2 = pedrasPos[j].z - cz;
+    if (Math.abs(dx2) < halfL && Math.abs(dz2) < halfP) removerPedra(pedrasPos[j]);
+  }
+}
+
+// Limpa todas as arvores e pedras dentro de um circulo (legado, ainda usado se quiser)
 function limparVegetacaoCirculo(cx, cz, raio) {
   var raio2 = raio * raio;
   for (var i = arvoresPos.length - 1; i >= 0; i--) {
