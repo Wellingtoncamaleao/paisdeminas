@@ -103,9 +103,12 @@ async function soltarObjeto() {
   var rotY = ref.mesh.rotation.y;
 
   // Validação: dentro do claim
+  // Usa lado/2 (mais permissivo) em vez de raioColisao (diagonal — restritivo demais)
   if (typeof dentroDoClaim === 'function') {
-    var raio = ref.raioColisao || 1;
-    if (!dentroDoClaim(x, z, raio + 0.5)) {
+    var meioLado = ref.mesh.userData.lado
+      ? ref.mesh.userData.lado / 2
+      : (ref.raioColisao || 1);
+    if (!dentroDoClaim(x, z, meioLado + 0.3)) {
       if (typeof mostrarDica === 'function') {
         mostrarDica('Não pode ficar fora do seu terreno', 2500);
       }
