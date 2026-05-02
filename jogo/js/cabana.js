@@ -223,3 +223,48 @@ var CUSTOS_CABANA = {
   media:   { madeira: 50, pedra: 10 },
   grande:  { madeira: 100, pedra: 30 }
 };
+
+// Lados das cabanas — pra colisao precisa
+var LADOS_CABANA = {
+  pequena: 4,
+  media: 6,
+  grande: 8
+};
+
+// Retorna array de retangulos de parede (em coords absolutas, ja rotacionados)
+// pra cada cabana. Norte tem 2 segmentos com abertura no meio (porta).
+// Cada retangulo: { x, z, larg, prof, rotY } — colidiveis com circulo do personagem.
+function obterColisaoCabana(tipo, x, z, rotY) {
+  var lado = LADOS_CABANA[tipo] || 4;
+  var espessura = 0.18;
+  var meiaPorta = 0.6;
+
+  // Paredes em coords LOCAIS (centro da cabana = origem)
+  var paredesLocais = [
+    // Norte (frente, +Z) — 2 segmentos com abertura no meio (porta de largura 1.2m)
+    { dx: -(lado / 4 + meiaPorta / 2), dz: lado / 2, larg: lado / 2 - meiaPorta, prof: espessura },
+    { dx: (lado / 4 + meiaPorta / 2),  dz: lado / 2, larg: lado / 2 - meiaPorta, prof: espessura },
+    // Sul (-Z) — parede inteira
+    { dx: 0, dz: -lado / 2, larg: lado, prof: espessura },
+    // Leste (+X)
+    { dx: lado / 2,  dz: 0, larg: espessura, prof: lado },
+    // Oeste (-X)
+    { dx: -lado / 2, dz: 0, larg: espessura, prof: lado }
+  ];
+
+  // Aplica rotacao Y e translacao
+  var cosR = Math.cos(rotY);
+  var sinR = Math.sin(rotY);
+  var paredesGlobais = [];
+  for (var i = 0; i < paredesLocais.length; i++) {
+    var p = paredesLocais[i];
+    paredesGlobais.push({
+      x: x + p.dx * cosR - p.dz * sinR,
+      z: z + p.dx * sinR + p.dz * cosR,
+      larg: p.larg,
+      prof: p.prof,
+      rotY: rotY
+    });
+  }
+  return paredesGlobais;
+}

@@ -1,4 +1,6 @@
-// Colisao: testa se uma posicao (x,z) eh livre de arvores/pedras e dentro do mundo
+// Colisao: testa se uma posicao (x,z) eh livre de arvores/pedras/paredes e dentro do mundo
+var paredesCabana = []; // retangulos de parede {x, z, larg, prof, rotY}
+
 function podeMover(x, z) {
   var margem = 0.5; // raio do personagem
 
@@ -23,5 +25,28 @@ function podeMover(x, z) {
     if (dx2 * dx2 + dz2 * dz2 < raio2 * raio2) return false;
   }
 
+  // Paredes de cabanas (retangulos rotacionados)
+  for (var k = 0; k < paredesCabana.length; k++) {
+    if (colideRetCirc(x, z, paredesCabana[k], margem)) return false;
+  }
+
   return true;
+}
+
+// Colisao circulo-retangulo rotacionado:
+// transforma o ponto pro espaco local do retangulo, faz AABB clamp
+function colideRetCirc(px, pz, ret, raio) {
+  var dx = px - ret.x;
+  var dz = pz - ret.z;
+  var cosR = Math.cos(-ret.rotY);
+  var sinR = Math.sin(-ret.rotY);
+  var localX = dx * cosR - dz * sinR;
+  var localZ = dx * sinR + dz * cosR;
+  var halfW = ret.larg / 2;
+  var halfP = ret.prof / 2;
+  var clampX = Math.max(-halfW, Math.min(halfW, localX));
+  var clampZ = Math.max(-halfP, Math.min(halfP, localZ));
+  var distX = localX - clampX;
+  var distZ = localZ - clampZ;
+  return (distX * distX + distZ * distZ) < (raio * raio);
 }

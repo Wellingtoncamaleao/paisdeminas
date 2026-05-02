@@ -29,10 +29,9 @@ function carregarCabanasSalvas() {
         tipo: item.tipo, x: item.x, z: item.z, rotY: item.rotY, mesh: grupo,
         raioColisao: grupo.userData.raioColisao
       });
-      // Adiciona obstaculo de colisao
-      arvoresPos.push({
-        x: item.x, z: item.z, raio: grupo.userData.raioColisao
-      });
+      // Adiciona paredes como obstaculos (com abertura na porta)
+      var paredes = obterColisaoCabana(item.tipo, item.x, item.z, item.rotY || 0);
+      for (var pj = 0; pj < paredes.length; pj++) paredesCabana.push(paredes[pj]);
     }
   } catch (e) {
     console.warn('Falha ao carregar cabanas:', e);
@@ -218,8 +217,9 @@ function confirmarConstrucao() {
     raioColisao: grupo.userData.raioColisao
   });
 
-  // Adiciona como obstaculo de colisao
-  arvoresPos.push({ x: x, z: z, raio: grupo.userData.raioColisao });
+  // Adiciona paredes da cabana como obstaculos (com abertura na porta)
+  var paredes = obterColisaoCabana(tipo, x, z, rotY);
+  for (var pi = 0; pi < paredes.length; pi++) paredesCabana.push(paredes[pi]);
 
   // Fumaca subindo da chamine (so cabana media e grande tem chamine)
   if (typeof adicionarFumacaPara === 'function') adicionarFumacaPara(grupo);
