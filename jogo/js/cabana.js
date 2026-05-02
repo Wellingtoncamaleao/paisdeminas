@@ -107,7 +107,7 @@ function montarBase(grupo, largura, prof, mat) {
 
 function montarParedesQuadradas(grupo, lado, alt, mat, comPorta, comJanela) {
   var espessura = 0.18;
-  var meiaPorta = 0.6;
+  var meiaPorta = 0.9; // porta de 1.8m (cabe folgado o personagem de raio 0.5)
   var altPorta = 1.9;
 
   // Norte (frente, +Z) — sempre com porta
@@ -237,7 +237,7 @@ var LADOS_CABANA = {
 function obterColisaoCabana(tipo, x, z, rotY) {
   var lado = LADOS_CABANA[tipo] || 4;
   var espessura = 0.18;
-  var meiaPorta = 0.6;
+  var meiaPorta = 0.9; // mesmo valor de montarParedesQuadradas pra colisao casar com visual
 
   // Paredes em coords LOCAIS (centro da cabana = origem)
   var paredesLocais = [
