@@ -55,6 +55,8 @@ function iniciarJogo() {
   inicializarFumaca();
   // Fogueiras (carrega do localStorage)
   inicializarFogueiras();
+  // Outros jogadores (Fase 4.1+4.2): polling do servidor pra ver claims/cabanas/fogueiras/avatares
+  inicializarOutrosJogadores();
   // Controles touch (auto-detecta mobile)
   inicializarTouch();
 
@@ -83,6 +85,7 @@ function animar() {
   atualizarConstrucao(delta);
   atualizarFumaca(delta);
   atualizarFogueiras(delta);
+  atualizarOutrosJogadores(delta);
   atualizarAudio(delta);
   enviarPingPosicao();
 

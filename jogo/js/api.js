@@ -88,3 +88,6 @@ function apiSalvarInventario(madeira, pedra) {
 function apiPingPosicao(x, z, rotY) {
   return apiFetch('state.php?action=ping_posicao', { method: 'POST', body: { x: x, z: z, rotY: rotY } });
 }
+function apiOutrosPlayers() {
+  return apiFetch('players.php');
+}
