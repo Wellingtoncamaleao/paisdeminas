@@ -9,6 +9,10 @@ function inicializarClaim() {
     if (salvo) {
       claimAtual = JSON.parse(salvo);
       construirCercaVisual(claimAtual.x, claimAtual.z, claimAtual.raio);
+      // Limpa vegetacao residual do claim ao recarregar (caso fix seja novo)
+      if (typeof limparVegetacaoCirculo === 'function') {
+        limparVegetacaoCirculo(claimAtual.x, claimAtual.z, claimAtual.raio - 0.5);
+      }
     }
   } catch (e) {
     console.warn('Falha ao ler claim:', e);
@@ -40,6 +44,10 @@ function tentarClaim() {
   }
 
   construirCercaVisual(px, pz, raio);
+  // Limpa arvores e pedras dentro do claim (terra agora pertence ao jogador)
+  if (typeof limparVegetacaoCirculo === 'function') {
+    limparVegetacaoCirculo(px, pz, raio - 0.5);
+  }
   // Cria pilhas vazias agora — se ja tem inventario, materializa
   if (typeof atualizarPilhas === 'function') atualizarPilhas();
   mostrarMensagem('Esta terra é sua. Colete madeira e pedra para construir.', 5500);

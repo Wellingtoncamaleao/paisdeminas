@@ -16,6 +16,14 @@ function tentarColeta() {
   var px = personagem.position.x;
   var pz = personagem.position.z;
 
+  // -1. Móveis interativos (cama dorme, etc.) — prioridade alta
+  if (typeof tentarInteragirMovel === 'function') {
+    if (tentarInteragirMovel(px, pz, 1.8)) {
+      ultimaColetaMs = agora;
+      return;
+    }
+  }
+
   // 0. Se tem fogueira apagada perto, prioriza acender (mesma tecla E)
   if (typeof tentarAcenderFogueiraProx === 'function') {
     if (tentarAcenderFogueiraProx(px, pz, raioInteracao)) {
@@ -92,4 +100,45 @@ function removerPedra(ped) {
 
   var i = pedrasPos.indexOf(ped);
   if (i >= 0) pedrasPos.splice(i, 1);
+}
+
+// Limpa todas as arvores e pedras dentro de um circulo (usado no claim)
+function limparVegetacaoCirculo(cx, cz, raio) {
+  var raio2 = raio * raio;
+  for (var i = arvoresPos.length - 1; i >= 0; i--) {
+    var dx = arvoresPos[i].x - cx;
+    var dz = arvoresPos[i].z - cz;
+    if (dx * dx + dz * dz < raio2) removerArvore(arvoresPos[i]);
+  }
+  for (var j = pedrasPos.length - 1; j >= 0; j--) {
+    var dx2 = pedrasPos[j].x - cx;
+    var dz2 = pedrasPos[j].z - cz;
+    if (dx2 * dx2 + dz2 * dz2 < raio2) removerPedra(pedrasPos[j]);
+  }
+}
+
+// Limpa arvores e pedras dentro do bbox rotacionado de uma cabana (mais preciso)
+function limparVegetacaoBboxCabana(cabana) {
+  var halfL = ((typeof LADOS_CABANA !== 'undefined' && LADOS_CABANA[cabana.tipo]) || 4) / 2 + 0.5;
+  var cosR = Math.cos(-(cabana.rotY || 0));
+  var sinR = Math.sin(-(cabana.rotY || 0));
+
+  for (var i = arvoresPos.length - 1; i >= 0; i--) {
+    var dx = arvoresPos[i].x - cabana.x;
+    var dz = arvoresPos[i].z - cabana.z;
+    var localX = dx * cosR - dz * sinR;
+    var localZ = dx * sinR + dz * cosR;
+    if (Math.abs(localX) < halfL && Math.abs(localZ) < halfL) {
+      removerArvore(arvoresPos[i]);
+    }
+  }
+  for (var j = pedrasPos.length - 1; j >= 0; j--) {
+    var dx2 = pedrasPos[j].x - cabana.x;
+    var dz2 = pedrasPos[j].z - cabana.z;
+    var localX2 = dx2 * cosR - dz2 * sinR;
+    var localZ2 = dx2 * sinR + dz2 * cosR;
+    if (Math.abs(localX2) < halfL && Math.abs(localZ2) < halfL) {
+      removerPedra(pedrasPos[j]);
+    }
+  }
 }

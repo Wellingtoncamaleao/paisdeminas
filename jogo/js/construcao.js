@@ -25,13 +25,18 @@ function carregarCabanasSalvas() {
       grupo.position.set(item.x, 0, item.z);
       grupo.rotation.y = item.rotY || 0;
       cena.add(grupo);
-      cabanasConstruidas.push({
+      var cabanaCarregada = {
         tipo: item.tipo, x: item.x, z: item.z, rotY: item.rotY, mesh: grupo,
         raioColisao: grupo.userData.raioColisao
-      });
+      };
+      cabanasConstruidas.push(cabanaCarregada);
       // Adiciona paredes como obstaculos (com abertura na porta)
       var paredes = obterColisaoCabana(item.tipo, item.x, item.z, item.rotY || 0);
       for (var pj = 0; pj < paredes.length; pj++) paredesCabana.push(paredes[pj]);
+      // Limpa arvores/pedras que estejam dentro do bbox da cabana (cabanas antigas tinham vegetacao presa)
+      if (typeof limparVegetacaoBboxCabana === 'function') {
+        limparVegetacaoBboxCabana(cabanaCarregada);
+      }
     }
   } catch (e) {
     console.warn('Falha ao carregar cabanas:', e);
@@ -257,14 +262,20 @@ function confirmarConstrucao() {
     return;
   }
 
-  cabanasConstruidas.push({
+  var novaCabana = {
     tipo: tipo, x: x, z: z, rotY: rotY, mesh: grupo,
     raioColisao: grupo.userData.raioColisao
-  });
+  };
+  cabanasConstruidas.push(novaCabana);
 
   // Adiciona paredes da cabana como obstaculos (com abertura na porta)
   var paredes = obterColisaoCabana(tipo, x, z, rotY);
   for (var pi = 0; pi < paredes.length; pi++) paredesCabana.push(paredes[pi]);
+
+  // Limpa arvores/pedras que estejam dentro do bbox da cabana
+  if (typeof limparVegetacaoBboxCabana === 'function') {
+    limparVegetacaoBboxCabana(novaCabana);
+  }
 
   // Fumaca subindo da chamine (so cabana media e grande tem chamine)
   if (typeof adicionarFumacaPara === 'function') adicionarFumacaPara(grupo);

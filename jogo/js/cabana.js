@@ -222,12 +222,16 @@ function montarMoveisInternos(grupo, tipo, lado) {
   var matMetal = new THREE.MeshLambertMaterial({ color: 0x8a7848 });
   var matTapete = new THREE.MeshLambertMaterial({ color: 0x8a3825 });
 
+  // Estrutura de moveis interativos (preenchida abaixo) — usada pelo modulo moveis-interativos
+  grupo.userData.moveis = {};
+
   // Cama: presente em todas as cabanas (dorm e basico)
   // Posicao: encostada na parede leste (X+), centrada em Z
   var cama = criarCama(matMoveisMad, matColchao, matTravess);
   cama.position.set(lado / 2 - 0.55, 0.15, -lado / 4);
   cama.rotation.y = Math.PI / 2; // cabeceira pra leste
   grupo.add(cama);
+  grupo.userData.moveis.cama = { x: cama.position.x, z: cama.position.z };
 
   if (tipo === 'pequena') {
     // Cabana pequena: cama + baú pequeno

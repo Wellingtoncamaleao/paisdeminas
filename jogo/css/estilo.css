@@ -186,6 +186,21 @@ body.mobile #hud-relogio {
   opacity: 1;
 }
 
+/* Overlay de fade preto (usado pra dormir na cama) */
+#overlay-fade {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 90;
+  opacity: 0;
+  transition: opacity 1.4s ease-in-out;
+  pointer-events: none;
+}
+#overlay-fade.escuro {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 /* ========== CONTROLES TOUCH (MOBILE) ========== */
 /* Por padrão escondidos. body.mobile mostra. */
 #joy-base, #botoes-touch { display: none; }
