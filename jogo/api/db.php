@@ -46,10 +46,11 @@ function aplicarMigrations(PDO $pdo): void {
     if (!in_array('pilha_ped_rot', $cClaims, true)) $pdo->exec('ALTER TABLE claims ADD COLUMN pilha_ped_rot REAL DEFAULT 0');
 
     // Tabela meta pra controlar migrations runtime (idempotentes mas executadas 1x)
-    $pdo->exec('CREATE TABLE IF NOT EXISTS meta_migrations (
+    // Atencao: aspas SIMPLES em datetime('now') — duplas viram identificador no SQLite
+    $pdo->exec("CREATE TABLE IF NOT EXISTS meta_migrations (
         nome TEXT PRIMARY KEY,
-        aplicada_em TEXT DEFAULT (datetime("now"))
-    )');
+        aplicada_em TEXT DEFAULT (datetime('now'))
+    )");
 
     // Realinhamento automatico unico — corrige claims antigos que ficaram com angulos divergentes
     $stmt = $pdo->prepare('SELECT 1 FROM meta_migrations WHERE nome = ?');
