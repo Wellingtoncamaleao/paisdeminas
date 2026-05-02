@@ -215,26 +215,106 @@ function montarChamine(grupo, larguraChamine, altMin, profChamine, mat, altura) 
 var FABRICAS_CABANA = {
   pequena: criarCabanaPequena,
   media: criarCabanaMedia,
-  grande: criarCabanaGrande
+  grande: criarCabanaGrande,
+  fogueira: criarFogueiraGrupo
 };
 
 var CUSTOS_CABANA = {
   pequena: { madeira: 22 },
   media:   { madeira: 50, pedra: 10 },
-  grande:  { madeira: 100, pedra: 30 }
+  grande:  { madeira: 100, pedra: 30 },
+  fogueira: { madeira: 3 }
 };
 
-// Lados das cabanas — pra colisao precisa
+// Lados das construcoes — pra colisao precisa
 var LADOS_CABANA = {
   pequena: 4,
   media: 6,
-  grande: 8
+  grande: 8,
+  fogueira: 1.5
 };
+
+// Materiais da fogueira (lazy init)
+var matFogueiraPedra = null;
+var matFogueiraTronco = null;
+var matFogueiraChama = null;
+var matFogueiraBrasa = null;
+
+function inicializarMateriaisFogueira() {
+  if (matFogueiraPedra) return;
+  matFogueiraPedra = new THREE.MeshLambertMaterial({ color: 0x6e6a64, flatShading: true });
+  matFogueiraTronco = new THREE.MeshLambertMaterial({ color: 0x4a2f1a });
+  matFogueiraChama = new THREE.MeshBasicMaterial({
+    color: 0xff8030, transparent: true, opacity: 0.92, fog: false, depthWrite: false
+  });
+  matFogueiraBrasa = new THREE.MeshBasicMaterial({
+    color: 0xff3010, transparent: true, opacity: 0.9, fog: false
+  });
+}
+
+// Cria grupo da fogueira (pedras em circulo + lenha + brasa + chama + PointLight)
+function criarFogueiraGrupo() {
+  inicializarMateriaisFogueira();
+  var grupo = new THREE.Group();
+  grupo.userData.tipo = 'fogueira';
+  grupo.userData.raioColisao = 1.0;
+
+  // 6 pedras em circulo (varias rotacoes pra parecer natural)
+  var pedraGeo = new THREE.DodecahedronGeometry(0.22, 0);
+  for (var i = 0; i < 6; i++) {
+    var ang = (i / 6) * Math.PI * 2;
+    var pedra = new THREE.Mesh(pedraGeo, matFogueiraPedra);
+    var dist = 0.45 + Math.random() * 0.08;
+    pedra.position.set(Math.cos(ang) * dist, 0.13, Math.sin(ang) * dist);
+    pedra.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+    pedra.scale.setScalar(0.85 + Math.random() * 0.35);
+    pedra.castShadow = true;
+    grupo.add(pedra);
+  }
+
+  // 4 troncos arrumados em "tipi" (cones convergindo no topo)
+  var troncoGeo = new THREE.CylinderGeometry(0.05, 0.06, 0.65, 5);
+  for (var k = 0; k < 4; k++) {
+    var angT = (k / 4) * Math.PI * 2;
+    var tronco = new THREE.Mesh(troncoGeo, matFogueiraTronco);
+    tronco.position.set(Math.cos(angT) * 0.16, 0.32, Math.sin(angT) * 0.16);
+    tronco.rotation.z = -Math.cos(angT) * 0.45;
+    tronco.rotation.x = Math.sin(angT) * 0.45;
+    tronco.castShadow = true;
+    grupo.add(tronco);
+  }
+
+  // Brasa (esfera achatada vermelha no centro)
+  var brasaGeo = new THREE.SphereGeometry(0.18, 8, 6);
+  var brasa = new THREE.Mesh(brasaGeo, matFogueiraBrasa);
+  brasa.position.set(0, 0.16, 0);
+  brasa.scale.set(1, 0.4, 1);
+  grupo.add(brasa);
+  grupo.userData.brasa = brasa;
+
+  // Chama (cone laranja-amarelo, animado no loop pra oscilar)
+  var chamaGeo = new THREE.ConeGeometry(0.2, 0.85, 6);
+  var chama = new THREE.Mesh(chamaGeo, matFogueiraChama);
+  chama.position.set(0, 0.7, 0);
+  grupo.add(chama);
+  grupo.userData.chama = chama;
+
+  // Luz da fogueira — ponto laranja, raio razoavel pra iluminar arredores
+  var luz = new THREE.PointLight(0xff7720, 1.4, 16, 1.6);
+  luz.position.set(0, 1.0, 0);
+  grupo.add(luz);
+  grupo.userData.luz = luz;
+
+  return grupo;
+}
 
 // Retorna array de retangulos de parede (em coords absolutas, ja rotacionados)
 // pra cada cabana. Norte tem 2 segmentos com abertura no meio (porta).
 // Cada retangulo: { x, z, larg, prof, rotY } — colidiveis com circulo do personagem.
 function obterColisaoCabana(tipo, x, z, rotY) {
+  // Fogueira nao tem paredes — colisao redonda eh adicionada em construcao.js (arvoresPos)
+  if (tipo === 'fogueira') return [];
+
   var lado = LADOS_CABANA[tipo] || 4;
   var espessura = 0.18;
   var meiaPorta = 0.9; // mesmo valor de montarParedesQuadradas pra colisao casar com visual

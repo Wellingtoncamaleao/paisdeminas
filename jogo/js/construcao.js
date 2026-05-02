@@ -166,6 +166,17 @@ function posicaoValida(x, z, raio) {
     if (dd < (raio + c.raioColisao + 1)) return false;
   }
 
+  // Nao pode sobrepor fogueira
+  if (typeof fogueirasConstruidas !== 'undefined') {
+    for (var fi = 0; fi < fogueirasConstruidas.length; fi++) {
+      var fc = fogueirasConstruidas[fi];
+      var fdx = x - fc.x;
+      var fdz = z - fc.z;
+      var fd = Math.sqrt(fdx * fdx + fdz * fdz);
+      if (fd < (raio + 1.5)) return false;
+    }
+  }
+
   return true;
 }
 
@@ -211,6 +222,16 @@ function confirmarConstrucao() {
   grupo.position.set(x, 0, z);
   grupo.rotation.y = rotY;
   cena.add(grupo);
+
+  // Fogueira tem fluxo proprio (sem paredes, sem fumaca de chamine, com timer de consumo)
+  if (tipo === 'fogueira') {
+    if (typeof registrarFogueira === 'function') registrarFogueira(grupo, x, z);
+    fecharBarraConstrucao();
+    modoConstrucao = 'fechado';
+    cabanaTipoAtual = null;
+    mostrarMensagem('Fogueira acesa. Cada fogueira gasta 1 madeira a cada 30s.', 4500);
+    return;
+  }
 
   cabanasConstruidas.push({
     tipo: tipo, x: x, z: z, rotY: rotY, mesh: grupo,

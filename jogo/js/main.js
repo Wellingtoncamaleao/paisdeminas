@@ -53,6 +53,8 @@ function iniciarJogo() {
   inicializarConstrucao();
   // Fase 3.1: fumaca das chamines das cabanas existentes
   inicializarFumaca();
+  // Fogueiras (carrega do localStorage)
+  inicializarFogueiras();
   // Controles touch (auto-detecta mobile)
   inicializarTouch();
 
@@ -80,6 +82,7 @@ function animar() {
   atualizarVento(delta);
   atualizarConstrucao(delta);
   atualizarFumaca(delta);
+  atualizarFogueiras(delta);
   atualizarAudio(delta);
 
   renderer.render(cena, camera);
