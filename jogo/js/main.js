@@ -33,12 +33,14 @@ function iniciarJogo() {
 
   // Ordem importa: mundo → trilha → floresta (depende da trilha) → personagem → controles → camera → audio
   iniciarMundo();
+  inicializarEstrelas();   // depende do ceuGrupo criado em iniciarMundo
   iniciarTrilha();
   iniciarFloresta();
   iniciarPersonagem();
   iniciarControles();
   iniciarCamera();
   iniciarAudio();
+  inicializarTempo();      // ciclo dia/noite
 
   // Modulos da Fase 2: inventario + HUD + claim + coleta + pilhas visuais
   inicializarInventario();
@@ -73,6 +75,7 @@ function animar() {
   atualizarPersonagem(delta);
   atualizarCamera(delta);
   atualizarCeu();
+  atualizarTempo(delta);
   atualizarSombra();
   atualizarVento(delta);
   atualizarConstrucao(delta);

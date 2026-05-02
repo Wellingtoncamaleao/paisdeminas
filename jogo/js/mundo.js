@@ -1,6 +1,11 @@
 // Mundo: terreno plano, ceu de amanhecer, neblina, iluminacao
 var terrenoMesh;
-var ceuGrupo; // dome + sol — segue a camera
+var ceuGrupo;       // dome + sol + lua + estrelas — segue a camera
+var skyMaterial;    // material do shader do dome (uniforms manipulados pelo tempo)
+var luzAmbienteGlobal;
+var solGlobal;      // DirectionalLight
+var solVisualMesh;  // esfera amarela representando o sol
+var luaMesh;        // esfera branca-azulada
 
 function iniciarMundo() {
   // Ceu de amanhecer com gradiente (rosa no horizonte, azul-claro no zenite)
@@ -22,10 +27,12 @@ function iniciarMundo() {
 
   // Luz ambiente — azul-acinzentada do amanhecer (vinda de cima e do chao verde)
   var luzAmbiente = new THREE.HemisphereLight(0xfff0d4, 0x3d5e2e, 0.5);
+  luzAmbienteGlobal = luzAmbiente;
   cena.add(luzAmbiente);
 
   // Sol — direcional baixo no horizonte, dourado, projetando sombras
   var sol = new THREE.DirectionalLight(0xffd4a3, 1.85);
+  solGlobal = sol;
   sol.position.set(80, 60, 50);
   sol.castShadow = true;
   // Frustum da camera de sombra — cobre area razoavel ao redor do jogador
@@ -49,8 +56,16 @@ function iniciarMundo() {
   var solGeo = new THREE.SphereGeometry(15, 24, 16);
   var solMat = new THREE.MeshBasicMaterial({ color: 0xfff2cc, fog: false });
   var solVisual = new THREE.Mesh(solGeo, solMat);
+  solVisualMesh = solVisual;
   solVisual.position.set(220, 90, 140);
   ceuGrupo.add(solVisual);
+
+  // Lua — esfera branca-azulada oposta ao sol, visivel a noite
+  var luaGeo = new THREE.SphereGeometry(11, 20, 14);
+  var luaMat = new THREE.MeshBasicMaterial({ color: 0xe8e8ff, fog: false });
+  luaMesh = new THREE.Mesh(luaGeo, luaMat);
+  luaMesh.visible = false;
+  ceuGrupo.add(luaMesh);
 
   // Luz de preenchimento sutil pro outro lado nao ficar preto
   var fill = new THREE.DirectionalLight(0xb8c9d9, 0.3);
@@ -64,7 +79,7 @@ function criarCeuGradiente() {
   cena.add(ceuGrupo);
 
   var skyGeo = new THREE.SphereGeometry(300, 32, 16);
-  var skyMat = new THREE.ShaderMaterial({
+  skyMaterial = new THREE.ShaderMaterial({
     side: THREE.BackSide,
     fog: false,
     uniforms: {
@@ -96,7 +111,7 @@ function criarCeuGradiente() {
       '}'
     ].join('\n')
   });
-  var sky = new THREE.Mesh(skyGeo, skyMat);
+  var sky = new THREE.Mesh(skyGeo, skyMaterial);
   ceuGrupo.add(sky);
 }
 
@@ -105,14 +120,56 @@ function atualizarCeu() {
   if (ceuGrupo) ceuGrupo.position.copy(camera.position);
 }
 
-// Faz a sombra do sol seguir o personagem (mantendo direcao do sol fixa)
+// Aplicado a cada frame por tempo.js — atualiza ceu, sol, fog, ilum ambiente
+function aplicarTempoNoMundo(t) {
+  if (!skyMaterial || !solGlobal) return;
+
+  // Cores do ceu
+  var cores = calcularCoresCeu(t);
+  skyMaterial.uniforms.corZenite.value.copy(cores.zenite);
+  skyMaterial.uniforms.corHorizonte.value.copy(cores.horizonte);
+  skyMaterial.uniforms.corBaixo.value.copy(cores.baixo);
+
+  // Fog acompanha cor do horizonte
+  if (cena.fog) cena.fog.color.copy(cores.horizonte);
+
+  // Intensidade do sol — direcao e posicao sao tratadas por atualizarSombra (segue jogador)
+  solGlobal.intensity = calcularIntensidadeSol(t);
+
+  // Sol visual no ceu (no ceuGrupo, posicao local — segue camera)
+  var solPos = calcularPosicaoSol(t);
+  if (solVisualMesh) {
+    solVisualMesh.position.copy(solPos.clone().multiplyScalar(2.2));
+    solVisualMesh.visible = solGlobal.intensity > 0.05;
+  }
+
+  // Lua: oposta ao sol, visivel quando sol fraco
+  if (luaMesh) {
+    luaMesh.position.copy(solPos.clone().multiplyScalar(-2.2));
+    luaMesh.visible = solGlobal.intensity < 0.4;
+  }
+
+  // Luz ambiente: maior de dia, menor a noite
+  if (luzAmbienteGlobal) {
+    var fator = solGlobal.intensity / 1.85; // 0..1
+    luzAmbienteGlobal.intensity = 0.18 + fator * 0.45;
+  }
+}
+
+// Sombra do sol: segue o jogador, e direcao acompanha posicao calculada por tempo.js
 // Sem isso, a area com sombra so cobre regiao perto da origem do mundo
 function atualizarSombra() {
-  if (!window.__sol || !personagem) return;
+  if (!solGlobal || !personagem) return;
   var px = personagem.position.x;
   var pz = personagem.position.z;
-  // Mantem offset fixo do sol relativo ao alvo (sol "vem do nordeste")
-  window.__sol.position.set(px + 80, 60, pz + 50);
-  window.__sol.target.position.set(px, 0, pz);
-  window.__sol.target.updateMatrixWorld();
+  // Direcao do sol vem do tempo (se tempo.js carregado), senao usa offset fixo
+  var posSol;
+  if (typeof calcularPosicaoSol === 'function' && typeof tempoAtual !== 'undefined') {
+    posSol = calcularPosicaoSol(tempoAtual);
+  } else {
+    posSol = new THREE.Vector3(80, 60, 50);
+  }
+  solGlobal.position.set(px + posSol.x, Math.max(20, posSol.y), pz + posSol.z);
+  solGlobal.target.position.set(px, 0, pz);
+  solGlobal.target.updateMatrixWorld();
 }
