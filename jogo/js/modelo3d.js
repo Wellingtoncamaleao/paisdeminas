@@ -50,16 +50,22 @@ function criarColonoComAnimacao(corCamisa) {
       o.frustumCulled = false; // evita sumir em poses extremas
       if (o.material) {
         var origs = Array.isArray(o.material) ? o.material : [o.material];
-        var lamberts = origs.map(function(m) {
-          // skinning eh detectado automaticamente pelo Three.js quando o material
-          // eh usado em SkinnedMesh. NAO passar skinning:true (deprecated em r155+).
-          var mat = new THREE.MeshLambertMaterial({
+        var novos = origs.map(function(m) {
+          // MeshStandardMaterial com emissive sutil garante visibilidade mesmo
+          // em sombra/noite (Lambert puro fica preto sem DirectionalLight).
+          // Color afeta + map preserva textura. Emissive = cor*0.18 evita "preto".
+          if (m.map) m.map.colorSpace = THREE.SRGBColorSpace;
+          var mat = new THREE.MeshStandardMaterial({
             map: m.map || null,
-            color: corPlayer.clone()
+            color: corPlayer.clone(),
+            emissive: corPlayer.clone().multiplyScalar(0.18),
+            emissiveMap: m.map || null,
+            roughness: 0.85,
+            metalness: 0.0
           });
           return mat;
         });
-        o.material = lamberts.length === 1 ? lamberts[0] : lamberts;
+        o.material = novos.length === 1 ? novos[0] : novos;
       }
     }
   });
