@@ -68,20 +68,19 @@ function criarCorpoColono(corCamisa) {
   cabelo.castShadow = true;
   corpoGrupo.add(cabelo);
 
-  // Barba farta — cobre queixo e parte das bochechas
+  // Barba farta — esfera achatada cobrindo queixo e bochechas (estilo Pixar)
   var matBarba = new THREE.MeshLambertMaterial({ color: corBarba });
-  var barba = new THREE.Mesh(new THREE.ConeGeometry(0.21, 0.30, 10), matBarba);
-  barba.position.set(0, 1.51, 0.05);
-  barba.rotation.x = Math.PI;
-  barba.scale.set(1.0, 1.0, 0.55);
+  var barba = new THREE.Mesh(new THREE.SphereGeometry(0.20, 14, 10), matBarba);
+  barba.position.set(0, 1.51, 0.07);
+  barba.scale.set(1.05, 0.95, 0.65);
   corpoGrupo.add(barba);
 
-  // Bigode — pequeno box escuro acima da barba
+  // Bigode — box maior pretinho acima da barba
   var bigode = new THREE.Mesh(
-    new THREE.BoxGeometry(0.13, 0.025, 0.04),
+    new THREE.BoxGeometry(0.16, 0.035, 0.05),
     matBarba
   );
-  bigode.position.set(0, 1.585, 0.215);
+  bigode.position.set(0, 1.595, 0.218);
   corpoGrupo.add(bigode);
 
   // Olhos — esferinhas pretas projetadas (z fora da esfera)
@@ -105,13 +104,13 @@ function criarCorpoColono(corCamisa) {
   sobrDir.rotation.z = 0.18;
   corpoGrupo.add(sobrDir);
 
-  // Nariz — cone pele projetado
+  // Nariz — esfera arredondada projetada (estilo Pixar)
   var nariz = new THREE.Mesh(
-    new THREE.ConeGeometry(0.035, 0.08, 6),
+    new THREE.SphereGeometry(0.045, 10, 8),
     new THREE.MeshLambertMaterial({ color: 0xc07850 })
   );
-  nariz.position.set(0, 1.625, 0.245);
-  nariz.rotation.x = Math.PI / 2;
+  nariz.position.set(0, 1.628, 0.248);
+  nariz.scale.set(0.85, 0.95, 1.1);
   corpoGrupo.add(nariz);
 
   // Chapeu (cone + aba)
