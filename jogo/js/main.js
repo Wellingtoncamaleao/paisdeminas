@@ -110,6 +110,13 @@ window.estadoServidor = null;
 document.addEventListener('DOMContentLoaded', function() {
   inicializarLogin();
 
+  // Pre-carrega modelo .glb em background pra ja estar pronto quando clicar Comecar
+  if (typeof carregarModeloColono === 'function') {
+    carregarModeloColono().catch(function(e) {
+      console.error('Erro carregando modelo:', e);
+    });
+  }
+
   document.getElementById('btn-comecar').addEventListener('click', async function() {
     if (!window.session) {
       mostrarMensagem('Faça login antes de começar.', 3000);
@@ -120,11 +127,16 @@ document.addEventListener('DOMContentLoaded', function() {
     btn.disabled = true;
     btn.textContent = 'Carregando...';
     try {
-      window.estadoServidor = await apiCarregarEstado();
+      // Carrega estado + modelo 3d em paralelo
+      var resultados = await Promise.all([
+        apiCarregarEstado(),
+        carregarModeloColono()
+      ]);
+      window.estadoServidor = resultados[0];
     } catch (e) {
       btn.disabled = false;
       btn.textContent = 'Começar';
-      alert('Erro ao carregar estado do servidor: ' + e.message);
+      alert('Erro ao carregar: ' + e.message);
       return;
     }
 

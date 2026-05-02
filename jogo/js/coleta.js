@@ -2,10 +2,11 @@
 var ultimaColetaMs = 0;
 var cooldownColeta = 400;
 var raioInteracao = 2.8;
-var matrixZeroColeta = new THREE.Matrix4();
+var matrixZeroColeta = null; // criado em inicializarColeta() apos THREE estar pronto
 
 function inicializarColeta() {
   // Pre-cria matriz "zero" usada pra esconder instancias coletadas
+  matrixZeroColeta = new THREE.Matrix4();
   matrixZeroColeta.makeScale(0, 0, 0);
 }
 

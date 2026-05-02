@@ -98,7 +98,24 @@
 
   <canvas id="canvas-jogo"></canvas>
 
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { clone as skeletonClone } from 'three/addons/utils/SkeletonUtils.js';
+    window.THREE = THREE;
+    window.GLTFLoader = GLTFLoader;
+    window.cloneSkeleton = skeletonClone;
+    window.dispatchEvent(new Event('threeReady'));
+  </script>
+  <script src="js/modelo3d.js?v=__BUILD__"></script>
   <script src="js/api.js?v=__BUILD__"></script>
   <script src="js/login.js?v=__BUILD__"></script>
   <script src="js/texturas.js?v=__BUILD__"></script>

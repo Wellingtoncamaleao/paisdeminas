@@ -1,12 +1,17 @@
 // Vento sutil: rotacao Z senoidal nas copas das arvores
 // Usa as matrizes originais salvas em floresta.js + multiplica por uma rotacao a cada frame
 var tempoVento = 0;
-var matrizTempVento = new THREE.Matrix4();
-var matrizRotZVento = new THREE.Matrix4();
-var matrizFinalVento = new THREE.Matrix4();
+var matrizTempVento = null;
+var matrizRotZVento = null;
+var matrizFinalVento = null;
 
 function atualizarVento(delta) {
   if (typeof copasParaVento === 'undefined' || copasParaVento.length === 0) return;
+  if (!matrizTempVento) {
+    matrizTempVento = new THREE.Matrix4();
+    matrizRotZVento = new THREE.Matrix4();
+    matrizFinalVento = new THREE.Matrix4();
+  }
   tempoVento += delta;
 
   for (var k = 0; k < copasParaVento.length; k++) {
