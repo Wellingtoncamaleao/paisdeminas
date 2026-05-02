@@ -92,7 +92,7 @@ function atualizarMover(delta) {
 
 function rotacionarObjMovendo() {
   if (!objMovendo) return;
-  objMovendo.ref.mesh.rotation.y += Math.PI / 2;
+  objMovendo.ref.mesh.rotation.y += Math.PI / 4; // 45° por aperto (8 posições)
 }
 
 async function soltarObjeto() {
