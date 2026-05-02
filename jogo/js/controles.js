@@ -13,6 +13,7 @@ function iniciarControles() {
     if (!teclas[e.code]) {
       if (e.code === 'KeyC' && typeof tentarClaim === 'function') tentarClaim();
       if (e.code === 'KeyE' && typeof tentarColeta === 'function') tentarColeta();
+      if (e.code === 'KeyV' && typeof proximoPresetCamera === 'function') proximoPresetCamera();
     }
     teclas[e.code] = true;
   });

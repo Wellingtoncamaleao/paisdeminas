@@ -1,12 +1,47 @@
 // Camera de terceira pessoa: orbita atras do personagem, mouse rotaciona
-var cameraYaw = Math.PI + Math.PI / 4; // comeca olhando pra direcao da trilha (nordeste)
-var cameraPitch = 0.25;
-var distanciaCamera = 6.5;
-var alturaAlvo = 1.4;
+// 4 presets estilo FC Mobile (Próxima, Padrão, Distante, Tática)
+var cameraYaw = Math.PI + Math.PI / 4;  // comeca olhando pra direcao da trilha
+var cameraPitch = 0.55;                 // (sobrescrito pelo preset abaixo)
+var distanciaCamera = 8.5;              // (sobrescrito pelo preset abaixo)
+var alturaAlvo = 1.4;                   // (sobrescrito pelo preset abaixo)
+
+var presetsCamera = [
+  { nome: 'PRÓXIMA',  dist: 5.0,  pitch: 0.40, alturaAlvo: 1.3 },
+  { nome: 'PADRÃO',   dist: 8.5,  pitch: 0.55, alturaAlvo: 1.4 },
+  { nome: 'DISTANTE', dist: 13,   pitch: 0.75, alturaAlvo: 1.5 },
+  { nome: 'TÁTICA',   dist: 20,   pitch: 1.30, alturaAlvo: 1.5 }
+];
+var presetCameraAtual = 1; // PADRAO por default
+var CHAVE_CAMERA = 'paisdeminas-camera-preset';
 
 function iniciarCamera() {
-  // Posicao inicial calculada uma vez antes do primeiro frame
+  // Carrega preset salvo se houver
+  try {
+    var salvo = localStorage.getItem(CHAVE_CAMERA);
+    if (salvo !== null) {
+      var idx = parseInt(salvo, 10);
+      if (idx >= 0 && idx < presetsCamera.length) presetCameraAtual = idx;
+    }
+  } catch (e) {}
+  aplicarPresetCamera(presetCameraAtual, false);
   atualizarCamera(0);
+}
+
+function aplicarPresetCamera(idx, mostrarDicaUi) {
+  presetCameraAtual = idx;
+  var p = presetsCamera[idx];
+  distanciaCamera = p.dist;
+  cameraPitch = p.pitch;
+  alturaAlvo = p.alturaAlvo;
+  try { localStorage.setItem(CHAVE_CAMERA, String(idx)); } catch (e) {}
+  if (mostrarDicaUi && typeof mostrarDica === 'function') {
+    mostrarDica('Câmera: ' + p.nome, 1800);
+  }
+}
+
+function proximoPresetCamera() {
+  var prox = (presetCameraAtual + 1) % presetsCamera.length;
+  aplicarPresetCamera(prox, true);
 }
 
 function atualizarCamera(delta) {

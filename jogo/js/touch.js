@@ -45,12 +45,22 @@ function criarUiTouch() {
     '<button id="btn-construir" class="btn-touch">CONSTRUIR</button>';
   document.body.appendChild(botoes);
 
+  // Botao de camera (separado, canto superior esquerdo)
+  var btnCam = document.createElement('button');
+  btnCam.id = 'btn-camera';
+  btnCam.className = 'btn-touch btn-camera';
+  btnCam.textContent = 'CÂMERA';
+  document.body.appendChild(btnCam);
+
   // Bind dos botoes
   bindBotaoToggle('btn-correr', 'ShiftLeft');
   bindBotaoTap('btn-coletar', function() { if (typeof tentarColeta === 'function') tentarColeta(); });
   bindBotaoTap('btn-clamar', function() { if (typeof tentarClaim === 'function') tentarClaim(); });
   bindBotaoTap('btn-construir', function() {
     mostrarDica('Construção em breve (Fase 3)', 2000);
+  });
+  bindBotaoTap('btn-camera', function() {
+    if (typeof proximoPresetCamera === 'function') proximoPresetCamera();
   });
 }
 

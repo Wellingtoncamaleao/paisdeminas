@@ -227,6 +227,18 @@ body.mobile .btn-touch.ativo {
   transform: scale(0.92);
 }
 
+/* Botao de camera no canto superior esquerdo (separado dos botoes de acao) */
+body.mobile #btn-camera.btn-camera {
+  position: fixed;
+  top: 0.8rem;
+  left: 0.8rem;
+  width: 64px;
+  height: 64px;
+  font-size: 0.6rem;
+  z-index: 50;
+  touch-action: none;
+}
+
 /* HUD inventario menor em mobile */
 body.mobile #hud-inventario {
   top: 0.8rem;
@@ -312,6 +324,7 @@ body.mobile #tela-inicial .dicas {
   }
   body.mobile #joy-base,
   body.mobile #botoes-touch,
+  body.mobile #btn-camera,
   body.mobile #hud-inventario,
   body.mobile #hud-dica,
   body.mobile #mensagem,
@@ -351,5 +364,12 @@ body.mobile #tela-inicial .dicas {
     top: 0.5rem;
     right: 0.5rem;
     padding: 0.4rem 0.7rem;
+  }
+  body.mobile #btn-camera.btn-camera {
+    top: 0.5rem;
+    left: 0.5rem;
+    width: 56px;
+    height: 56px;
+    font-size: 0.55rem;
   }
 }
