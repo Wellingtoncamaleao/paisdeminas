@@ -127,26 +127,50 @@ function selecionarCabana(tipo) {
   modoConstrucao = 'posicionando';
 }
 
-// Esconde telhado das cabanas quando o personagem está dentro
-// (pra ele ver os móveis através de cima — convenção tipo Sims/RimWorld)
+// Esconde telhado das cabanas quando QUALQUER personagem (eu ou avatares de
+// outros players) entra dentro. Aplica a TODAS as cabanas (minhas e dos outros).
+// Convenção tipo Sims/RimWorld.
 function atualizarTelhadoCabanas() {
-  if (typeof cabanasConstruidas === 'undefined' || !personagem) return;
-  var px = personagem.position.x;
-  var pz = personagem.position.z;
+  if (!personagem) return;
 
-  for (var i = 0; i < cabanasConstruidas.length; i++) {
-    var c = cabanasConstruidas[i];
+  // Coleta todas as cabanas (minhas + de outros players)
+  var todasCabanas = [];
+  if (typeof cabanasConstruidas !== 'undefined') {
+    for (var i = 0; i < cabanasConstruidas.length; i++) todasCabanas.push(cabanasConstruidas[i]);
+  }
+  if (typeof cabanasOutros !== 'undefined') {
+    for (var idC in cabanasOutros) todasCabanas.push(cabanasOutros[idC]);
+  }
+  if (todasCabanas.length === 0) return;
+
+  // Coleta posicoes de TODOS os players (meu personagem + outros avatares)
+  var posicoes = [{ x: personagem.position.x, z: personagem.position.z }];
+  if (typeof avataresOutros !== 'undefined') {
+    for (var idA in avataresOutros) {
+      var av = avataresOutros[idA];
+      posicoes.push({ x: av.mesh.position.x, z: av.mesh.position.z });
+    }
+  }
+
+  for (var j = 0; j < todasCabanas.length; j++) {
+    var c = todasCabanas[j];
     if (!c.mesh || !c.mesh.userData.telhado) continue;
     var lado = c.mesh.userData.lado || 4;
-    // Transforma posicao do personagem pro espaço local da cabana
-    var dx = px - c.x;
-    var dz = pz - c.z;
-    var cosR = Math.cos(-c.rotY);
-    var sinR = Math.sin(-c.rotY);
-    var localX = dx * cosR - dz * sinR;
-    var localZ = dx * sinR + dz * cosR;
-    var dentro = (Math.abs(localX) < lado / 2 - 0.2) && (Math.abs(localZ) < lado / 2 - 0.2);
-    c.mesh.userData.telhado.visible = !dentro;
+    var cosR = Math.cos(-(c.rotY || 0));
+    var sinR = Math.sin(-(c.rotY || 0));
+    var alguemDentro = false;
+    for (var k = 0; k < posicoes.length; k++) {
+      var p = posicoes[k];
+      var dx = p.x - c.x;
+      var dz = p.z - c.z;
+      var localX = dx * cosR - dz * sinR;
+      var localZ = dx * sinR + dz * cosR;
+      if (Math.abs(localX) < lado / 2 - 0.2 && Math.abs(localZ) < lado / 2 - 0.2) {
+        alguemDentro = true;
+        break;
+      }
+    }
+    c.mesh.userData.telhado.visible = !alguemDentro;
   }
 }
 
