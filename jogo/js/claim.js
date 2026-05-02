@@ -122,6 +122,23 @@ function construirCercaVisual(x, z, larg, prof, rotY) {
   cena.add(cercaGrupo);
 }
 
+// Tecla H — volta pra casa (centro do claim, ou spawn se ainda não tem claim)
+function voltarParaCasa() {
+  if (!personagem) return;
+  var alvo = null;
+  if (claimAtual) {
+    alvo = { x: claimAtual.x, z: claimAtual.z };
+  } else if (window.session && window.session.player && window.session.player.spawn) {
+    alvo = window.session.player.spawn;
+  }
+  if (!alvo) {
+    if (typeof mostrarDica === 'function') mostrarDica('Você ainda não tem casa', 2500);
+    return;
+  }
+  personagem.position.set(alvo.x, 0, alvo.z);
+  if (typeof mostrarDica === 'function') mostrarDica('Voltou pra casa', 1500);
+}
+
 // Helper pra construcao.js: ponto (px, pz) está dentro do retângulo rotacionado do claim?
 function dentroDoClaim(px, pz, margem) {
   if (!claimAtual) return false;

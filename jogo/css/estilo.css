@@ -524,6 +524,17 @@ body.mobile #btn-camera.btn-camera {
   touch-action: none;
 }
 
+body.mobile #btn-casa.btn-casa {
+  position: fixed;
+  top: 5.2rem;
+  left: 0.8rem;
+  width: 64px;
+  height: 64px;
+  font-size: 0.65rem;
+  z-index: 50;
+  touch-action: none;
+}
+
 /* HUD inventario menor em mobile */
 body.mobile #hud-inventario {
   top: 0.8rem;
@@ -819,6 +830,7 @@ body.mobile .btn-construcao {
   body.mobile #joy-base,
   body.mobile #botoes-touch,
   body.mobile #btn-camera,
+  body.mobile #btn-casa,
   body.mobile #hud-inventario,
   body.mobile #hud-relogio,
   body.mobile #hud-dica,
@@ -868,5 +880,12 @@ body.mobile .btn-construcao {
     width: 56px;
     height: 56px;
     font-size: 0.55rem;
+  }
+  body.mobile #btn-casa.btn-casa {
+    top: 4.2rem;
+    left: 0.5rem;
+    width: 56px;
+    height: 56px;
+    font-size: 0.6rem;
   }
 }

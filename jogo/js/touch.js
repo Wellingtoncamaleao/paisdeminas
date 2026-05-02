@@ -52,6 +52,13 @@ function criarUiTouch() {
   btnCam.textContent = 'CÂMERA';
   document.body.appendChild(btnCam);
 
+  // Botao "Casa" — teleporta pra dentro do claim
+  var btnCasa = document.createElement('button');
+  btnCasa.id = 'btn-casa';
+  btnCasa.className = 'btn-touch btn-casa';
+  btnCasa.textContent = 'CASA';
+  document.body.appendChild(btnCasa);
+
   // Bind dos botoes
   bindBotaoToggle('btn-correr', 'ShiftLeft');
   bindBotaoTap('btn-coletar', function() { if (typeof tentarColeta === 'function') tentarColeta(); });
@@ -61,6 +68,9 @@ function criarUiTouch() {
   });
   bindBotaoTap('btn-camera', function() {
     if (typeof proximoPresetCamera === 'function') proximoPresetCamera();
+  });
+  bindBotaoTap('btn-casa', function() {
+    if (typeof voltarParaCasa === 'function') voltarParaCasa();
   });
 }
 
