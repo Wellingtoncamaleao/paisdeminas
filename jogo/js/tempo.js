@@ -4,8 +4,6 @@
 // browsers veem o mesmo horario (relogios sincronizados via NTP).
 var tempoAtual = 0;
 var DURACAO_DIA_S = 480; // 8 minutos reais = 1 dia no jogo
-var pausaTempo = false;
-var tempoCongeladoCliente = 0; // se pausa, congela a visualizacao DESTE cliente
 
 function calcularTempoMundo() {
   var agoraSec = Date.now() / 1000;
@@ -17,31 +15,12 @@ function inicializarTempo() {
 }
 
 function atualizarTempo(delta) {
-  if (pausaTempo) {
-    tempoAtual = tempoCongeladoCliente;
-  } else {
-    tempoAtual = calcularTempoMundo();
-  }
+  tempoAtual = calcularTempoMundo();
 
   if (typeof aplicarTempoNoMundo === 'function') aplicarTempoNoMundo(tempoAtual);
   if (typeof atualizarEstrelas === 'function') atualizarEstrelas(tempoAtual);
   if (typeof atualizarLua === 'function') atualizarLua(tempoAtual);
   if (typeof atualizarRelogioHud === 'function') atualizarRelogioHud();
-}
-
-function togglePausaTempo() {
-  pausaTempo = !pausaTempo;
-  if (pausaTempo) {
-    tempoCongeladoCliente = calcularTempoMundo();
-  }
-  if (typeof mostrarDica === 'function') {
-    mostrarDica(
-      pausaTempo
-        ? 'Tempo congelado (só pra você — mundo continua)'
-        : 'Tempo voltou ao do mundo',
-      2200
-    );
-  }
 }
 
 function tempoParaTextoHora(t) {

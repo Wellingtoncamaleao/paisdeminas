@@ -20,7 +20,6 @@ function iniciarControles() {
         if (e.code === 'KeyR' && modoConstrucao === 'posicionando') rotacionarFantasma();
         if (e.code === 'Enter' && modoConstrucao === 'posicionando') confirmarConstrucao();
         if (e.code === 'Escape' && modoConstrucao !== 'fechado') cancelarConstrucao();
-        if (e.code === 'KeyT' && typeof togglePausaTempo === 'function') togglePausaTempo();
       }
       // V (cycla camera) sempre disponivel
       if (e.code === 'KeyV' && typeof proximoPresetCamera === 'function') proximoPresetCamera();
