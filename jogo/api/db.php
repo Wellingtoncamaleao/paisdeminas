@@ -44,6 +44,106 @@ function aplicarMigrations(PDO $pdo): void {
     if (!in_array('pilha_ped_offz', $cClaims, true)) $pdo->exec('ALTER TABLE claims ADD COLUMN pilha_ped_offz REAL');
     if (!in_array('pilha_mad_rot', $cClaims, true)) $pdo->exec('ALTER TABLE claims ADD COLUMN pilha_mad_rot REAL DEFAULT 0');
     if (!in_array('pilha_ped_rot', $cClaims, true)) $pdo->exec('ALTER TABLE claims ADD COLUMN pilha_ped_rot REAL DEFAULT 0');
+
+    // Tabela meta pra controlar migrations runtime (idempotentes mas executadas 1x)
+    $pdo->exec('CREATE TABLE IF NOT EXISTS meta_migrations (
+        nome TEXT PRIMARY KEY,
+        aplicada_em TEXT DEFAULT (datetime("now"))
+    )');
+
+    // Realinhamento automatico unico — corrige claims antigos que ficaram com angulos divergentes
+    $stmt = $pdo->prepare('SELECT 1 FROM meta_migrations WHERE nome = ?');
+    $stmt->execute(['realinhar_v1']);
+    if (!$stmt->fetch()) {
+        realinharTodosClaims($pdo);
+        $pdo->prepare('INSERT INTO meta_migrations (nome) VALUES (?)')->execute(['realinhar_v1']);
+    }
+}
+
+// Realinha todos os claims pra rotacao do mais antigo (claim ancora).
+// Rotaciona cabanas, fogueiras e offsets de pilhas em torno do centro do claim
+// pelo delta de angulo, preservando a posicao relativa dentro do terreno.
+function realinharTodosClaims(PDO $pdo): int {
+    $todos = $pdo->query('SELECT * FROM claims ORDER BY id ASC')->fetchAll();
+    if (count($todos) < 2) return 0;
+
+    $rotAlvo = (float)$todos[0]['rot_y'];
+    $realinhados = 0;
+
+    $pdo->beginTransaction();
+    try {
+        for ($i = 1; $i < count($todos); $i++) {
+            $c = $todos[$i];
+            $rotAtual = (float)$c['rot_y'];
+            $delta = $rotAlvo - $rotAtual;
+            // Normaliza pra (-PI, PI)
+            while ($delta > M_PI) $delta -= 2 * M_PI;
+            while ($delta < -M_PI) $delta += 2 * M_PI;
+            if (abs($delta) < 0.001) continue;
+
+            $cosD = cos($delta);
+            $sinD = sin($delta);
+            $cx = (float)$c['x'];
+            $cz = (float)$c['z'];
+
+            // Rotaciona cabanas em torno do centro do claim
+            $stmt = $pdo->prepare('SELECT id, x, z, rot_y FROM cabanas WHERE player_id = ?');
+            $stmt->execute([$c['player_id']]);
+            $upCab = $pdo->prepare('UPDATE cabanas SET x = ?, z = ?, rot_y = ? WHERE id = ?');
+            foreach ($stmt->fetchAll() as $cab) {
+                $dx = (float)$cab['x'] - $cx;
+                $dz = (float)$cab['z'] - $cz;
+                $newX = $cx + $dx * $cosD - $dz * $sinD;
+                $newZ = $cz + $dx * $sinD + $dz * $cosD;
+                $newRot = (float)$cab['rot_y'] + $delta;
+                $upCab->execute([$newX, $newZ, $newRot, $cab['id']]);
+            }
+
+            // Rotaciona fogueiras em torno do centro do claim
+            $stmt = $pdo->prepare('SELECT id, x, z FROM fogueiras WHERE player_id = ?');
+            $stmt->execute([$c['player_id']]);
+            $upFog = $pdo->prepare('UPDATE fogueiras SET x = ?, z = ? WHERE id = ?');
+            foreach ($stmt->fetchAll() as $f) {
+                $dx = (float)$f['x'] - $cx;
+                $dz = (float)$f['z'] - $cz;
+                $newX = $cx + $dx * $cosD - $dz * $sinD;
+                $newZ = $cz + $dx * $sinD + $dz * $cosD;
+                $upFog->execute([$newX, $newZ, $f['id']]);
+            }
+
+            // Pilhas: offsets ja sao relativos ao centro, basta rotacionar o vetor + somar delta na rotacao
+            $newPilhaMadOffX = $c['pilha_mad_offx']; $newPilhaMadOffZ = $c['pilha_mad_offz'];
+            $newPilhaMadRot = $c['pilha_mad_rot'];
+            if ($c['pilha_mad_offx'] !== null) {
+                $offX = (float)$c['pilha_mad_offx'];
+                $offZ = (float)$c['pilha_mad_offz'];
+                $newPilhaMadOffX = $offX * $cosD - $offZ * $sinD;
+                $newPilhaMadOffZ = $offX * $sinD + $offZ * $cosD;
+                $newPilhaMadRot = (float)($c['pilha_mad_rot'] ?? 0) + $delta;
+            }
+            $newPilhaPedOffX = $c['pilha_ped_offx']; $newPilhaPedOffZ = $c['pilha_ped_offz'];
+            $newPilhaPedRot = $c['pilha_ped_rot'];
+            if ($c['pilha_ped_offx'] !== null) {
+                $offX = (float)$c['pilha_ped_offx'];
+                $offZ = (float)$c['pilha_ped_offz'];
+                $newPilhaPedOffX = $offX * $cosD - $offZ * $sinD;
+                $newPilhaPedOffZ = $offX * $sinD + $offZ * $cosD;
+                $newPilhaPedRot = (float)($c['pilha_ped_rot'] ?? 0) + $delta;
+            }
+
+            $up = $pdo->prepare('UPDATE claims SET rot_y = ?, pilha_mad_offx = ?, pilha_mad_offz = ?, pilha_mad_rot = ?, pilha_ped_offx = ?, pilha_ped_offz = ?, pilha_ped_rot = ? WHERE id = ?');
+            $up->execute([$rotAlvo, $newPilhaMadOffX, $newPilhaMadOffZ, $newPilhaMadRot,
+                          $newPilhaPedOffX, $newPilhaPedOffZ, $newPilhaPedRot, $c['id']]);
+
+            $realinhados++;
+        }
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
+
+    return $realinhados;
 }
 
 function jsonResposta($dados, int $status = 200): void {

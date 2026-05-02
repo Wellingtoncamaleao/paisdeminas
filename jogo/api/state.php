@@ -233,6 +233,13 @@ if ($action === 'salvar_spawn') {
     jsonResposta(['ok' => true]);
 }
 
+if ($action === 'realinhar_tudo') {
+    // Re-roda o realinhamento mesmo se a migration runtime ja rodou
+    // (util quando claims novos divergiram de novo apos a primeira migracao)
+    $n = realinharTodosClaims($pdo);
+    jsonResposta(['ok' => true, 'realinhados' => $n]);
+}
+
 if ($action === 'ping_posicao') {
     $x = (float)($dados['x'] ?? 0);
     $z = (float)($dados['z'] ?? 0);

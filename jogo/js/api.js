@@ -109,3 +109,18 @@ function apiSalvarOffsetPilha(tipo, offX, offZ, rotY) {
     method: 'POST', body: { tipo: tipo, offX: offX, offZ: offZ, rotY: rotY || 0 }
   });
 }
+function apiRealinharTudo() {
+  return apiFetch('state.php?action=realinhar_tudo', { method: 'POST' });
+}
+
+// Helper de console: chame `realinharTudo()` no DevTools pra forcar
+// realinhamento de todos os terrenos a rotacao do mais antigo. Recarrega a pagina.
+window.realinharTudo = async function() {
+  try {
+    var r = await apiRealinharTudo();
+    console.log('Realinhados:', r.realinhados);
+    location.reload();
+  } catch (e) {
+    console.error('Erro ao realinhar:', e.message);
+  }
+};
