@@ -40,9 +40,16 @@ async function tentarClaim() {
 
   var rotY = obterRotacaoAlinhada(px, pz);
 
-  // Tenta clamar no servidor — pode falhar se outro jogador ja clamou ali
+  // Verifica se algum ponto do perimetro do retangulo invade a trilha
+  if (perimetroInvadeATrilha(px, pz, CLAIM_LARG, CLAIM_PROF, rotY)) {
+    mostrarDica('Terreno fica em cima da trilha — escolha outro lugar', 3500);
+    return;
+  }
+
+  // Tenta clamar no servidor — pode ajustar rotY ou rejeitar por overlap
+  var resp;
   try {
-    await apiSalvarClaim({
+    resp = await apiSalvarClaim({
       x: px, z: pz, larg: CLAIM_LARG, prof: CLAIM_PROF, rotY: rotY
     });
   } catch (e) {
@@ -50,14 +57,40 @@ async function tentarClaim() {
     return;
   }
 
-  claimAtual = { x: px, z: pz, larg: CLAIM_LARG, prof: CLAIM_PROF, rotY: rotY, t: Date.now() };
+  // Server pode ter sobrescrito rotY pra alinhar com vizinho — usa o que voltou
+  var rotYFinal = (resp && typeof resp.rotY === 'number') ? resp.rotY : rotY;
 
-  construirCercaVisual(px, pz, CLAIM_LARG, CLAIM_PROF, rotY);
+  claimAtual = {
+    x: px, z: pz, larg: CLAIM_LARG, prof: CLAIM_PROF, rotY: rotYFinal, t: Date.now()
+  };
+
+  construirCercaVisual(px, pz, CLAIM_LARG, CLAIM_PROF, rotYFinal);
   if (typeof limparVegetacaoRetanguloRotacionado === 'function') {
-    limparVegetacaoRetanguloRotacionado(px, pz, CLAIM_LARG - 1, CLAIM_PROF - 1, rotY);
+    limparVegetacaoRetanguloRotacionado(px, pz, CLAIM_LARG - 1, CLAIM_PROF - 1, rotYFinal);
   }
   if (typeof atualizarPilhas === 'function') atualizarPilhas();
   mostrarMensagem('Esta terra é sua. Colete madeira e pedra para construir.', 5500);
+}
+
+// Testa 8 pontos no perimetro do retangulo proposto contra a trilha
+function perimetroInvadeATrilha(cx, cz, larg, prof, rotY) {
+  var halfL = larg / 2, halfP = prof / 2;
+  var cosR = Math.cos(rotY || 0);
+  var sinR = Math.sin(rotY || 0);
+  var pontos = [
+    // 4 cantos
+    { x:  halfL, z:  halfP }, { x: -halfL, z:  halfP },
+    { x: -halfL, z: -halfP }, { x:  halfL, z: -halfP },
+    // 4 pontos medios das laterais (pra captar invasao mesmo se cantos OK)
+    { x: 0, z:  halfP }, { x: 0, z: -halfP },
+    { x:  halfL, z: 0 }, { x: -halfL, z: 0 }
+  ];
+  for (var i = 0; i < pontos.length; i++) {
+    var px = cx + pontos[i].x * cosR - pontos[i].z * sinR;
+    var pz = cz + pontos[i].x * sinR + pontos[i].z * cosR;
+    if (distanciaAteTrilha(px, pz) < 3) return true;
+  }
+  return false;
 }
 
 // Calcula rotacao Y do novo terreno:

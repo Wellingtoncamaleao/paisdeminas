@@ -80,32 +80,47 @@ if ($action === 'salvar_claim') {
     $prof = (float)($dados['prof'] ?? 16);
     $rotY = (float)($dados['rotY'] ?? 0);
 
-    // Valida overlap com claims de OUTROS players (AABB rotacionado simplificado)
-    // Pra V1: distancia entre centros < soma de meias-diagonais → overlap potencial
+    // Carrega claims de outros players uma vez
     $stmt = $pdo->prepare('
-        SELECT p.nome, c.x, c.z, c.larg, c.prof
+        SELECT p.nome, c.x, c.z, c.larg, c.prof, c.rot_y
         FROM claims c JOIN players p ON p.id = c.player_id
         WHERE c.player_id != ?
     ');
     $stmt->execute([$player['id']]);
+    $outros = $stmt->fetchAll();
+
+    // Valida overlap com claims de OUTROS players (distancia entre centros)
     $meiaDiag = sqrt($larg * $larg + $prof * $prof) / 2;
-    foreach ($stmt->fetchAll() as $outro) {
+    foreach ($outros as $outro) {
         $dx = $x - (float)$outro['x'];
         $dz = $z - (float)$outro['z'];
         $dist = sqrt($dx * $dx + $dz * $dz);
         $diagOutro = sqrt($outro['larg'] * $outro['larg'] + $outro['prof'] * $outro['prof']) / 2;
         if ($dist < ($meiaDiag + $diagOutro - 0.5)) {
-            jsonResposta([
-                'erro' => 'Esse terreno já é de ' . $outro['nome']
-            ], 409);
+            jsonResposta(['erro' => 'Esse terreno já é de ' . $outro['nome']], 409);
         }
     }
+
+    // SOBRESCREVE rotY com a do vizinho mais proximo (raio 50m)
+    // Garante alinhamento mesmo se client estava com claimsOutros desatualizado
+    $menorDist = INF;
+    $rotVizinho = null;
+    foreach ($outros as $outro) {
+        $dx = $x - (float)$outro['x'];
+        $dz = $z - (float)$outro['z'];
+        $dist = sqrt($dx * $dx + $dz * $dz);
+        if ($dist < 50 && $dist < $menorDist) {
+            $menorDist = $dist;
+            $rotVizinho = (float)$outro['rot_y'];
+        }
+    }
+    if ($rotVizinho !== null) $rotY = $rotVizinho;
 
     // INSERT (com UNIQUE em player_id, falha se ja tem claim)
     try {
         $stmt = $pdo->prepare('INSERT INTO claims (player_id, x, z, larg, prof, rot_y) VALUES (?, ?, ?, ?, ?, ?)');
         $stmt->execute([$player['id'], $x, $z, $larg, $prof, $rotY]);
-        jsonResposta(['ok' => true, 'id' => (int)$pdo->lastInsertId()]);
+        jsonResposta(['ok' => true, 'id' => (int)$pdo->lastInsertId(), 'rotY' => $rotY]);
     } catch (PDOException $e) {
         jsonResposta(['erro' => 'Você já tem um terreno'], 409);
     }
