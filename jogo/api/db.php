@@ -37,6 +37,11 @@ function aplicarMigrations(PDO $pdo): void {
     if (!in_array('spawn_z', $colunas, true)) {
         $pdo->exec('ALTER TABLE players ADD COLUMN spawn_z REAL');
     }
+    $cClaims = array_column($pdo->query('PRAGMA table_info(claims)')->fetchAll(), 'name');
+    if (!in_array('pilha_mad_offx', $cClaims, true)) $pdo->exec('ALTER TABLE claims ADD COLUMN pilha_mad_offx REAL');
+    if (!in_array('pilha_mad_offz', $cClaims, true)) $pdo->exec('ALTER TABLE claims ADD COLUMN pilha_mad_offz REAL');
+    if (!in_array('pilha_ped_offx', $cClaims, true)) $pdo->exec('ALTER TABLE claims ADD COLUMN pilha_ped_offx REAL');
+    if (!in_array('pilha_ped_offz', $cClaims, true)) $pdo->exec('ALTER TABLE claims ADD COLUMN pilha_ped_offz REAL');
 }
 
 function jsonResposta($dados, int $status = 200): void {

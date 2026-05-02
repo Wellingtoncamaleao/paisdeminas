@@ -48,6 +48,28 @@ function selecionarObjetoMaisProx() {
     }
   }
 
+  // Pilha de madeira
+  if (typeof pilhaMadeiraGrupo !== 'undefined' && pilhaMadeiraGrupo) {
+    var dxPm = px - pilhaMadeiraGrupo.position.x, dzPm = pz - pilhaMadeiraGrupo.position.z;
+    var d2Pm = dxPm * dxPm + dzPm * dzPm;
+    if (d2Pm < menorDist2 && d2Pm < 9) {
+      menorDist2 = d2Pm;
+      melhor = { mesh: pilhaMadeiraGrupo, x: pilhaMadeiraGrupo.position.x, z: pilhaMadeiraGrupo.position.z, raioColisao: 1.2 };
+      tipo = 'pilha-madeira';
+    }
+  }
+
+  // Pilha de pedra
+  if (typeof pilhaPedraGrupo !== 'undefined' && pilhaPedraGrupo) {
+    var dxPp = px - pilhaPedraGrupo.position.x, dzPp = pz - pilhaPedraGrupo.position.z;
+    var d2Pp = dxPp * dxPp + dzPp * dzPp;
+    if (d2Pp < menorDist2 && d2Pp < 9) {
+      menorDist2 = d2Pp;
+      melhor = { mesh: pilhaPedraGrupo, x: pilhaPedraGrupo.position.x, z: pilhaPedraGrupo.position.z, raioColisao: 1.2 };
+      tipo = 'pilha-pedra';
+    }
+  }
+
   if (!melhor) {
     if (typeof mostrarDica === 'function') {
       mostrarDica('Aproxime-se de uma cabana ou fogueira sua', 2500);
@@ -121,16 +143,23 @@ async function soltarObjeto() {
     if (objMovendo.tipo === 'cabana') {
       await apiMoverCabana(ref.id, x, z, rotY);
       ref.x = x; ref.z = z; ref.rotY = rotY;
-      // Re-adiciona paredes de colisão na nova posição
       if (typeof adicionarParedesCabana === 'function') {
         adicionarParedesCabana(ref.id, ref.tipo, x, z, rotY);
       }
     } else if (objMovendo.tipo === 'fogueira') {
       await apiMoverFogueira(ref.id, x, z);
       ref.x = x; ref.z = z;
-      // Atualiza obstáculo redondo da fogueira em arvoresPos
-      // (mais simples: deixa o obstáculo antigo, o jogador pode atravessar área antiga
-      //  até reload — aceito tradeoff)
+    } else if (objMovendo.tipo === 'pilha-madeira' || objMovendo.tipo === 'pilha-pedra') {
+      var tipoPilha = objMovendo.tipo === 'pilha-madeira' ? 'madeira' : 'pedra';
+      var offX = x - claimAtual.x;
+      var offZ = z - claimAtual.z;
+      await apiSalvarOffsetPilha(tipoPilha, offX, offZ);
+      // Atualiza claimAtual local pra refletir
+      if (tipoPilha === 'madeira') {
+        claimAtual.pilhaMadOffX = offX; claimAtual.pilhaMadOffZ = offZ;
+      } else {
+        claimAtual.pilhaPedOffX = offX; claimAtual.pilhaPedOffZ = offZ;
+      }
     }
   } catch (e) {
     if (typeof mostrarDica === 'function') {

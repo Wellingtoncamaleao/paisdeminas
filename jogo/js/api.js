@@ -104,3 +104,8 @@ function apiMoverFogueira(id, x, z) {
     method: 'POST', body: { id: id, x: x, z: z }
   });
 }
+function apiSalvarOffsetPilha(tipo, offX, offZ) {
+  return apiFetch('state.php?action=salvar_offset_pilha', {
+    method: 'POST', body: { tipo: tipo, offX: offX, offZ: offZ }
+  });
+}
