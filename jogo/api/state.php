@@ -17,6 +17,16 @@ $pdo = obterPdo();
 $metodo = $_SERVER['REQUEST_METHOD'];
 
 if ($metodo === 'GET') {
+    // Spawn salvo do player (null se primeiro acesso)
+    $stmt = $pdo->prepare('SELECT spawn_x, spawn_z FROM players WHERE id = ? LIMIT 1');
+    $stmt->execute([$player['id']]);
+    $spawnRow = $stmt->fetch();
+    $spawn = null;
+    if ($spawnRow && $spawnRow['spawn_x'] !== null) {
+        $spawn = ['x' => (float)$spawnRow['spawn_x'], 'z' => (float)$spawnRow['spawn_z']];
+    }
+    $player['spawn'] = $spawn;
+
     // Carrega estado completo do player
     $claim = null;
     $stmt = $pdo->prepare('SELECT x, z, larg, prof, rot_y FROM claims WHERE player_id = ? LIMIT 1');
@@ -157,6 +167,14 @@ if ($action === 'salvar_inventario') {
             atualizado_em = excluded.atualizado_em
     ');
     $stmt->execute([$player['id'], $madeira, $pedra]);
+    jsonResposta(['ok' => true]);
+}
+
+if ($action === 'salvar_spawn') {
+    $x = (float)($dados['x'] ?? 0);
+    $z = (float)($dados['z'] ?? 0);
+    $stmt = $pdo->prepare('UPDATE players SET spawn_x = ?, spawn_z = ? WHERE id = ?');
+    $stmt->execute([$x, $z, $player['id']]);
     jsonResposta(['ok' => true]);
 }
 

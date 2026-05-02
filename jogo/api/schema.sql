@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS players (
   senha_hash TEXT NOT NULL,
   token TEXT,
   cor_camisa TEXT DEFAULT '#7a4a26',
+  spawn_x REAL,
+  spawn_z REAL,
   criado_em TEXT DEFAULT (datetime('now'))
 );
 

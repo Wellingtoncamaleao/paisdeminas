@@ -361,6 +361,71 @@ body.mobile #hud-atalhos {
   display: none;
 }
 
+/* Overlay "Escolher onde nascer" */
+#overlay-spawn {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 70;
+  pointer-events: none;
+}
+
+#overlay-spawn.oculto {
+  display: none;
+}
+
+#overlay-spawn .spawn-instrucao {
+  background: rgba(20, 12, 6, 0.85);
+  color: #f6dca5;
+  padding: 0.9rem 1.6rem;
+  margin-top: 1.5rem;
+  font-family: Georgia, serif;
+  font-size: 1.05rem;
+  font-style: italic;
+  border: 1px solid rgba(246, 220, 165, 0.3);
+  border-radius: 4px;
+  text-shadow: 0 1px 2px #000;
+  text-align: center;
+  max-width: 80vw;
+}
+
+#overlay-spawn #btn-nascer {
+  background: rgba(120, 180, 90, 0.85);
+  color: #fff;
+  border: 2px solid rgba(160, 220, 120, 0.9);
+  padding: 0.9rem 2.5rem;
+  font-family: Georgia, serif;
+  font-size: 1.2rem;
+  letter-spacing: 0.08em;
+  border-radius: 4px;
+  margin-top: 0.8rem;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+#overlay-spawn #btn-nascer:hover:not(:disabled) {
+  background: rgba(140, 200, 100, 1);
+  transform: translateY(-2px);
+}
+#overlay-spawn #btn-nascer:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+body.mobile #overlay-spawn .spawn-instrucao {
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+body.mobile #overlay-spawn #btn-nascer {
+  font-size: 1rem;
+  padding: 0.7rem 1.8rem;
+}
+
 /* Overlay de fade preto (usado pra dormir na cama) */
 #overlay-fade {
   position: fixed;

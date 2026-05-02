@@ -60,6 +60,16 @@ function iniciarJogo() {
   // Controles touch (auto-detecta mobile)
   inicializarTouch();
 
+  // Gating de spawn — primeiro login: jogador escolhe onde nascer
+  // Login subsequente: posiciona no spawn salvo
+  var spawn = window.estadoServidor && window.estadoServidor.player && window.estadoServidor.player.spawn;
+  if (spawn) {
+    personagem.position.set(spawn.x, 0, spawn.z);
+  } else {
+    // Sem spawn salvo: entra no modo "escolha onde nascer"
+    if (typeof entrarModoEscolherSpawn === 'function') entrarModoEscolherSpawn();
+  }
+
   window.addEventListener('resize', aoRedimensionar);
 
   animar();

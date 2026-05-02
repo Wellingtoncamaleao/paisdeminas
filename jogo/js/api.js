@@ -91,3 +91,6 @@ function apiPingPosicao(x, z, rotY) {
 function apiOutrosPlayers() {
   return apiFetch('players.php');
 }
+function apiSalvarSpawn(x, z) {
+  return apiFetch('state.php?action=salvar_spawn', { method: 'POST', body: { x: x, z: z } });
+}

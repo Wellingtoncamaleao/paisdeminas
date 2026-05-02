@@ -11,14 +11,19 @@ function iniciarControles() {
   document.addEventListener('keydown', function(e) {
     // Handlers "one-shot" — disparam UMA vez quando tecla pressionada (nao ao segurar)
     if (!teclas[e.code]) {
-      if (e.code === 'KeyC' && typeof tentarClaim === 'function') tentarClaim();
-      if (e.code === 'KeyE' && typeof tentarColeta === 'function') tentarColeta();
+      // Durante "escolher onde nascer", desabilita acoes de jogo (C, B, E)
+      var spawnando = (typeof modoEscolhendoSpawn !== 'undefined' && modoEscolhendoSpawn);
+      if (!spawnando) {
+        if (e.code === 'KeyC' && typeof tentarClaim === 'function') tentarClaim();
+        if (e.code === 'KeyE' && typeof tentarColeta === 'function') tentarColeta();
+        if (e.code === 'KeyB' && typeof entrarModoConstrucao === 'function') entrarModoConstrucao();
+        if (e.code === 'KeyR' && modoConstrucao === 'posicionando') rotacionarFantasma();
+        if (e.code === 'Enter' && modoConstrucao === 'posicionando') confirmarConstrucao();
+        if (e.code === 'Escape' && modoConstrucao !== 'fechado') cancelarConstrucao();
+        if (e.code === 'KeyT' && typeof togglePausaTempo === 'function') togglePausaTempo();
+      }
+      // V (cycla camera) sempre disponivel
       if (e.code === 'KeyV' && typeof proximoPresetCamera === 'function') proximoPresetCamera();
-      if (e.code === 'KeyB' && typeof entrarModoConstrucao === 'function') entrarModoConstrucao();
-      if (e.code === 'KeyR' && modoConstrucao === 'posicionando') rotacionarFantasma();
-      if (e.code === 'Enter' && modoConstrucao === 'posicionando') confirmarConstrucao();
-      if (e.code === 'Escape' && modoConstrucao !== 'fechado') cancelarConstrucao();
-      if (e.code === 'KeyT' && typeof togglePausaTempo === 'function') togglePausaTempo();
     }
     teclas[e.code] = true;
   });

@@ -23,7 +23,20 @@ function obterPdo(): PDO {
         if ($schema !== false) $pdo->exec($schema);
     }
 
+    // Migrations idempotentes pra adaptar bancos antigos a novas colunas
+    aplicarMigrations($pdo);
+
     return $pdo;
+}
+
+function aplicarMigrations(PDO $pdo): void {
+    $colunas = array_column($pdo->query('PRAGMA table_info(players)')->fetchAll(), 'name');
+    if (!in_array('spawn_x', $colunas, true)) {
+        $pdo->exec('ALTER TABLE players ADD COLUMN spawn_x REAL');
+    }
+    if (!in_array('spawn_z', $colunas, true)) {
+        $pdo->exec('ALTER TABLE players ADD COLUMN spawn_z REAL');
+    }
 }
 
 function jsonResposta($dados, int $status = 200): void {
