@@ -1,0 +1,31 @@
+# Concept art e arquivos de planejamento ficam no repo (uteis para historico)
+# mas excluir lixo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build artifacts (nao temos build process, mas por seguranca)
+node_modules/
+dist/
+build/
+
+# Memoria local do agente (privado)
+memory/
+.claude/
+
+# Temporarios
+*.tmp
+*.bak
+~$*

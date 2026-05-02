@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Minas Gerais 1500</title>
+  <link rel="stylesheet" href="css/estilo.css?v=__BUILD__">
+</head>
+<body>
+  <div id="tela-inicial">
+    <h1>Minas Gerais 1500</h1>
+    <p class="subtitulo">Um simulador de colonização nas terras virgens dos anos 1500</p>
+    <button id="btn-comecar">Começar</button>
+    <div class="dicas">
+      <p>WASD — caminhar &nbsp;·&nbsp; Mouse — olhar &nbsp;·&nbsp; Shift — correr</p>
+      <p>C — clamar terreno &nbsp;·&nbsp; E — coletar &nbsp;·&nbsp; ESC — soltar mouse</p>
+    </div>
+  </div>
+
+  <div id="mensagem" class="oculto"></div>
+
+  <div id="aviso-rotate">
+    <div class="rotate-icone">⟲</div>
+    <h2>Gire o celular</h2>
+    <p>Este jogo é jogado na horizontal</p>
+  </div>
+
+  <canvas id="canvas-jogo"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="js/mundo.js?v=__BUILD__"></script>
+  <script src="js/trilha.js?v=__BUILD__"></script>
+  <script src="js/floresta.js?v=__BUILD__"></script>
+  <script src="js/personagem.js?v=__BUILD__"></script>
+  <script src="js/controles.js?v=__BUILD__"></script>
+  <script src="js/camera.js?v=__BUILD__"></script>
+  <script src="js/colisao.js?v=__BUILD__"></script>
+  <script src="js/audio.js?v=__BUILD__"></script>
+  <script src="js/vento.js?v=__BUILD__"></script>
+  <script src="js/inventario.js?v=__BUILD__"></script>
+  <script src="js/hud.js?v=__BUILD__"></script>
+  <script src="js/claim.js?v=__BUILD__"></script>
+  <script src="js/coleta.js?v=__BUILD__"></script>
+  <script src="js/pilhas.js?v=__BUILD__"></script>
+  <script src="js/touch.js?v=__BUILD__"></script>
+  <script src="js/main.js?v=__BUILD__"></script>
+</body>
+</html>

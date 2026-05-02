@@ -1,0 +1,12 @@
+# Reduz tamanho do contexto enviado pro Docker daemon
+.git/
+.gitignore
+.dockerignore
+README.md
+*.md
+concept/
+memory/
+.vscode/
+.idea/
+*.log
+*.bak
