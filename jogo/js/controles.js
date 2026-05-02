@@ -45,6 +45,14 @@ function iniciarControles() {
       mouseDY += e.movementY;
     }
   });
+
+  // Wheel do mouse — zoom in/out (PC). Mobile usa pinch que nao chega aqui.
+  renderer.domElement.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    if (typeof distanciaCamera === 'undefined') return;
+    var passo = e.deltaY > 0 ? 1 : -1;
+    distanciaCamera = Math.max(2.5, Math.min(35, distanciaCamera + passo * 0.8));
+  }, { passive: false });
 }
 
 function atualizarControles(delta) {
