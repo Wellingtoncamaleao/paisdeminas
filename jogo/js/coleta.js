@@ -2,12 +2,18 @@
 var ultimaColetaMs = 0;
 var cooldownColeta = 400;
 var raioInteracao = 2.8;
-var matrixZeroColeta = null; // criado em inicializarColeta() apos THREE estar pronto
+var matrixZeroColeta = null; // lazy init via obterMatrixZero()
+
+function obterMatrixZero() {
+  if (!matrixZeroColeta) {
+    matrixZeroColeta = new THREE.Matrix4();
+    matrixZeroColeta.makeScale(0, 0, 0);
+  }
+  return matrixZeroColeta;
+}
 
 function inicializarColeta() {
-  // Pre-cria matriz "zero" usada pra esconder instancias coletadas
-  matrixZeroColeta = new THREE.Matrix4();
-  matrixZeroColeta.makeScale(0, 0, 0);
+  obterMatrixZero(); // garante que existe
 }
 
 function tentarColeta() {
@@ -75,8 +81,9 @@ function encontrarMaisProximo(arr, px, pz) {
 
 function removerArvore(arv) {
   // Esconde instancia (escala 0 — fica invisivel mas nao precisa mexer no count)
-  arv.troncoMesh.setMatrixAt(arv.idx, matrixZeroColeta);
-  arv.copaMesh.setMatrixAt(arv.idx, matrixZeroColeta);
+  var mZero = obterMatrixZero();
+  arv.troncoMesh.setMatrixAt(arv.idx, mZero);
+  arv.copaMesh.setMatrixAt(arv.idx, mZero);
   arv.troncoMesh.instanceMatrix.needsUpdate = true;
   arv.copaMesh.instanceMatrix.needsUpdate = true;
 
@@ -96,7 +103,7 @@ function removerArvore(arv) {
 }
 
 function removerPedra(ped) {
-  ped.mesh.setMatrixAt(ped.idx, matrixZeroColeta);
+  ped.mesh.setMatrixAt(ped.idx, obterMatrixZero());
   ped.mesh.instanceMatrix.needsUpdate = true;
 
   var i = pedrasPos.indexOf(ped);
