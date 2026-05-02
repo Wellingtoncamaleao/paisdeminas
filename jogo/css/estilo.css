@@ -186,6 +186,52 @@ body.mobile #hud-relogio {
   opacity: 1;
 }
 
+/* HUD de atalhos do teclado (PC) — discreto canto inferior esquerdo */
+#hud-atalhos {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  background: rgba(20, 12, 6, 0.55);
+  color: #f6dca5;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid rgba(246, 220, 165, 0.2);
+  border-radius: 4px;
+  font-family: Georgia, serif;
+  font-size: 0.78rem;
+  z-index: 30;
+  pointer-events: none;
+  line-height: 1.7;
+  opacity: 0.55;
+  transition: opacity 0.25s;
+}
+
+#hud-atalhos:hover {
+  opacity: 1;
+}
+
+#hud-atalhos .atalho {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+#hud-atalhos .tecla {
+  display: inline-block;
+  background: rgba(246, 220, 165, 0.18);
+  border: 1px solid rgba(246, 220, 165, 0.35);
+  padding: 0.05rem 0.4rem;
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 0.7rem;
+  min-width: 1.6rem;
+  text-align: center;
+  font-family: Georgia, serif;
+}
+
+body.mobile #hud-atalhos {
+  display: none;
+}
+
 /* Overlay de fade preto (usado pra dormir na cama) */
 #overlay-fade {
   position: fixed;
