@@ -131,7 +131,31 @@ function selecionarCabana(tipo) {
   modoConstrucao = 'posicionando';
 }
 
+// Esconde telhado das cabanas quando o personagem está dentro
+// (pra ele ver os móveis através de cima — convenção tipo Sims/RimWorld)
+function atualizarTelhadoCabanas() {
+  if (typeof cabanasConstruidas === 'undefined' || !personagem) return;
+  var px = personagem.position.x;
+  var pz = personagem.position.z;
+
+  for (var i = 0; i < cabanasConstruidas.length; i++) {
+    var c = cabanasConstruidas[i];
+    if (!c.mesh || !c.mesh.userData.telhado) continue;
+    var lado = c.mesh.userData.lado || 4;
+    // Transforma posicao do personagem pro espaço local da cabana
+    var dx = px - c.x;
+    var dz = pz - c.z;
+    var cosR = Math.cos(-c.rotY);
+    var sinR = Math.sin(-c.rotY);
+    var localX = dx * cosR - dz * sinR;
+    var localZ = dx * sinR + dz * cosR;
+    var dentro = (Math.abs(localX) < lado / 2 - 0.2) && (Math.abs(localZ) < lado / 2 - 0.2);
+    c.mesh.userData.telhado.visible = !dentro;
+  }
+}
+
 function atualizarConstrucao(delta) {
+  atualizarTelhadoCabanas();
   if (modoConstrucao !== 'posicionando' || !cabanaFantasma) return;
 
   // Posiciona fantasma a frente do personagem (proporcional ao tamanho da cabana)

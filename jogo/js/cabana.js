@@ -40,10 +40,12 @@ function criarCabanaPequena() {
   // Base 4x4
   var lado = 4;
   var altParede = 2.5;
+  grupo.userData.lado = lado;
 
   montarBase(grupo, lado, lado, matMadeiraEscura);
   montarParedesQuadradas(grupo, lado, altParede, matMadeiraClara, /*comPorta*/ true, /*comJanela*/ false);
   montarTelhadoPiramide(grupo, lado, altParede, 1.6, matTelhadoPalha);
+  montarMoveisInternos(grupo, 'pequena', lado);
 
   return grupo;
 }
@@ -56,11 +58,13 @@ function criarCabanaMedia() {
 
   var lado = 6;
   var altParede = 2.8;
+  grupo.userData.lado = lado;
 
   montarBase(grupo, lado, lado, matMadeiraEscura);
   montarParedesQuadradas(grupo, lado, altParede, matMadeiraClara, true, true);
   montarTelhadoPiramide(grupo, lado, altParede, 2.0, matTelhadoPalha);
   montarChamine(grupo, lado * 0.3, altParede + 1.0, lado * 0.3, matPedra, 1.3);
+  montarMoveisInternos(grupo, 'media', lado);
 
   return grupo;
 }
@@ -73,6 +77,7 @@ function criarCabanaGrande() {
 
   var lado = 8;
   var altParede = 3.2;
+  grupo.userData.lado = lado;
 
   montarBase(grupo, lado, lado, matMadeiraEscura);
   montarParedesQuadradas(grupo, lado, altParede, matMadeiraClara, true, true);
@@ -91,6 +96,8 @@ function criarCabanaGrande() {
   jD.rotation.y = Math.PI / 2;
   jD.castShadow = true;
   grupo.add(jD);
+
+  montarMoveisInternos(grupo, 'grande', lado);
 
   return grupo;
 }
@@ -199,7 +206,202 @@ function montarTelhadoPiramide(grupo, lado, altParede, altTelhado, mat) {
   telhado.position.y = altParede + altTelhado / 2;
   telhado.rotation.y = Math.PI / 4; // alinha as faces com as paredes
   telhado.castShadow = true;
+  telhado.userData.eTelhado = true; // marca pra esconder quando jogador entra
   grupo.add(telhado);
+  // Salva ref pra acesso rapido
+  grupo.userData.telhado = telhado;
+}
+
+// === Moveis interiores (geometricos baratos, mesma estetica low-poly) ===
+function montarMoveisInternos(grupo, tipo, lado) {
+  // Materiais especificos pra moveis (criados aqui pra reuso)
+  var matMoveisMad = new THREE.MeshLambertMaterial({ color: 0x6a3818 });
+  var matColchao = new THREE.MeshLambertMaterial({ color: 0xc8a878 });
+  var matTravess = new THREE.MeshLambertMaterial({ color: 0xf0e4cc });
+  var matBau = new THREE.MeshLambertMaterial({ color: 0x4a2812 });
+  var matMetal = new THREE.MeshLambertMaterial({ color: 0x8a7848 });
+  var matTapete = new THREE.MeshLambertMaterial({ color: 0x8a3825 });
+
+  // Cama: presente em todas as cabanas (dorm e basico)
+  // Posicao: encostada na parede leste (X+), centrada em Z
+  var cama = criarCama(matMoveisMad, matColchao, matTravess);
+  cama.position.set(lado / 2 - 0.55, 0.15, -lado / 4);
+  cama.rotation.y = Math.PI / 2; // cabeceira pra leste
+  grupo.add(cama);
+
+  if (tipo === 'pequena') {
+    // Cabana pequena: cama + baú pequeno
+    var bauP = criarBau(matBau, matMetal, 0.7);
+    bauP.position.set(-lado / 2 + 0.5, 0.18, lado / 2 - 0.6);
+    bauP.rotation.y = Math.PI / 4;
+    grupo.add(bauP);
+
+    // Tapete pequeno no centro
+    var tapeteP = criarTapete(matTapete, 1.2);
+    tapeteP.position.set(0, 0.16, 0);
+    grupo.add(tapeteP);
+  } else if (tipo === 'media') {
+    // Cabana media: cama + mesa + 2 banquinhos + baú + tapete
+    var mesa = criarMesa(matMoveisMad, 1.0, 0.8);
+    mesa.position.set(-0.5, 0, 0.5);
+    grupo.add(mesa);
+
+    var banco1 = criarBanco(matMoveisMad);
+    banco1.position.set(-0.5, 0, 1.5);
+    grupo.add(banco1);
+
+    var banco2 = criarBanco(matMoveisMad);
+    banco2.position.set(-0.5, 0, -0.5);
+    banco2.rotation.y = Math.PI;
+    grupo.add(banco2);
+
+    var bauM = criarBau(matBau, matMetal, 0.9);
+    bauM.position.set(-lado / 2 + 0.5, 0.22, -lado / 2 + 0.5);
+    grupo.add(bauM);
+
+    var tapeteM = criarTapete(matTapete, 1.8);
+    tapeteM.position.set(-0.5, 0.16, 0.5);
+    grupo.add(tapeteM);
+  } else if (tipo === 'grande') {
+    // Cabana grande: cama dupla + mesa retangular + 4 cadeiras + baú grande + tapete
+    var mesaG = criarMesa(matMoveisMad, 1.6, 0.8, /*retangular*/ true);
+    mesaG.position.set(0, 0, 0);
+    grupo.add(mesaG);
+
+    var bancoG1 = criarBanco(matMoveisMad, 1.6);
+    bancoG1.position.set(0, 0, 1.0);
+    grupo.add(bancoG1);
+    var bancoG2 = criarBanco(matMoveisMad, 1.6);
+    bancoG2.position.set(0, 0, -1.0);
+    bancoG2.rotation.y = Math.PI;
+    grupo.add(bancoG2);
+
+    var bauG = criarBau(matBau, matMetal, 1.1);
+    bauG.position.set(-lado / 2 + 0.6, 0.24, -lado / 2 + 0.6);
+    grupo.add(bauG);
+
+    var tapeteG = criarTapete(matTapete, 2.6);
+    tapeteG.position.set(0, 0.16, 0);
+    grupo.add(tapeteG);
+  }
+}
+
+function criarCama(matMad, matColch, matTrav) {
+  var g = new THREE.Group();
+  // Estrutura de madeira (base)
+  var baseGeo = new THREE.BoxGeometry(2.0, 0.2, 1.0);
+  var base = new THREE.Mesh(baseGeo, matMad);
+  base.position.y = 0.1;
+  base.receiveShadow = true;
+  base.castShadow = true;
+  g.add(base);
+  // Colchao
+  var colchaoGeo = new THREE.BoxGeometry(1.85, 0.18, 0.85);
+  var colchao = new THREE.Mesh(colchaoGeo, matColch);
+  colchao.position.y = 0.29;
+  colchao.castShadow = true;
+  g.add(colchao);
+  // Travesseiro (cabeceira lado oeste)
+  var travGeo = new THREE.BoxGeometry(0.45, 0.12, 0.7);
+  var trav = new THREE.Mesh(travGeo, matTrav);
+  trav.position.set(-0.7, 0.45, 0);
+  trav.castShadow = true;
+  g.add(trav);
+  // Cabeceira (parede vertical na ponta)
+  var cabGeo = new THREE.BoxGeometry(0.1, 0.7, 1.0);
+  var cab = new THREE.Mesh(cabGeo, matMad);
+  cab.position.set(-1.0, 0.35, 0);
+  cab.castShadow = true;
+  g.add(cab);
+  return g;
+}
+
+function criarMesa(mat, comprimento, profundidade, retangular) {
+  var g = new THREE.Group();
+  var w = comprimento;
+  var d = profundidade;
+  // Tampo
+  var tampoGeo = retangular
+    ? new THREE.BoxGeometry(w, 0.06, d)
+    : new THREE.CylinderGeometry(w / 2, w / 2, 0.06, 16);
+  var tampo = new THREE.Mesh(tampoGeo, mat);
+  tampo.position.y = 0.7;
+  tampo.castShadow = true;
+  tampo.receiveShadow = true;
+  g.add(tampo);
+  // 4 pernas
+  var pernaGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.7, 6);
+  var posicoes = [
+    { x: w / 2 - 0.1, z: d / 2 - 0.1 },
+    { x: -w / 2 + 0.1, z: d / 2 - 0.1 },
+    { x: w / 2 - 0.1, z: -d / 2 + 0.1 },
+    { x: -w / 2 + 0.1, z: -d / 2 + 0.1 }
+  ];
+  for (var i = 0; i < 4; i++) {
+    var p = new THREE.Mesh(pernaGeo, mat);
+    p.position.set(posicoes[i].x, 0.35, posicoes[i].z);
+    p.castShadow = true;
+    g.add(p);
+  }
+  return g;
+}
+
+function criarBanco(mat, comprimento) {
+  var g = new THREE.Group();
+  var w = comprimento || 0.7;
+  // Assento
+  var assGeo = new THREE.BoxGeometry(w, 0.08, 0.35);
+  var ass = new THREE.Mesh(assGeo, mat);
+  ass.position.y = 0.45;
+  ass.castShadow = true;
+  g.add(ass);
+  // Pernas (2 pares laterais)
+  var pernaGeo = new THREE.BoxGeometry(0.06, 0.45, 0.06);
+  var posicoes = [
+    { x: w / 2 - 0.05, z: 0.13 },
+    { x: -w / 2 + 0.05, z: 0.13 },
+    { x: w / 2 - 0.05, z: -0.13 },
+    { x: -w / 2 + 0.05, z: -0.13 }
+  ];
+  for (var i = 0; i < 4; i++) {
+    var p = new THREE.Mesh(pernaGeo, mat);
+    p.position.set(posicoes[i].x, 0.225, posicoes[i].z);
+    p.castShadow = true;
+    g.add(p);
+  }
+  return g;
+}
+
+function criarBau(matMad, matMet, escala) {
+  var g = new THREE.Group();
+  var s = escala || 1;
+  // Corpo
+  var corpoGeo = new THREE.BoxGeometry(0.7 * s, 0.4 * s, 0.45 * s);
+  var corpo = new THREE.Mesh(corpoGeo, matMad);
+  corpo.position.y = 0.0;
+  corpo.castShadow = true;
+  g.add(corpo);
+  // Tampa (semi-cilindro deitado por cima)
+  var tampaGeo = new THREE.CylinderGeometry(0.225 * s, 0.225 * s, 0.7 * s, 8, 1, false, 0, Math.PI);
+  var tampa = new THREE.Mesh(tampaGeo, matMad);
+  tampa.rotation.z = Math.PI / 2;
+  tampa.position.y = 0.2 * s;
+  tampa.castShadow = true;
+  g.add(tampa);
+  // Fivela metalica frontal
+  var fivelaGeo = new THREE.BoxGeometry(0.1 * s, 0.12 * s, 0.04 * s);
+  var fivela = new THREE.Mesh(fivelaGeo, matMet);
+  fivela.position.set(0, 0.05 * s, 0.23 * s);
+  g.add(fivela);
+  return g;
+}
+
+function criarTapete(mat, lado) {
+  var geo = new THREE.PlaneGeometry(lado, lado * 0.7);
+  geo.rotateX(-Math.PI / 2);
+  var t = new THREE.Mesh(geo, mat);
+  t.receiveShadow = true;
+  return t;
 }
 
 function montarChamine(grupo, larguraChamine, altMin, profChamine, mat, altura) {
