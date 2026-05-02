@@ -118,6 +118,29 @@ function limparVegetacaoRetangulo(cx, cz, larg, prof) {
   }
 }
 
+// Versao rotacionada: limpa dentro de um retangulo com rotacao Y arbitraria
+function limparVegetacaoRetanguloRotacionado(cx, cz, larg, prof, rotY) {
+  var halfL = larg / 2;
+  var halfP = prof / 2;
+  var cosR = Math.cos(-(rotY || 0));
+  var sinR = Math.sin(-(rotY || 0));
+
+  for (var i = arvoresPos.length - 1; i >= 0; i--) {
+    var dx = arvoresPos[i].x - cx;
+    var dz = arvoresPos[i].z - cz;
+    var localX = dx * cosR - dz * sinR;
+    var localZ = dx * sinR + dz * cosR;
+    if (Math.abs(localX) < halfL && Math.abs(localZ) < halfP) removerArvore(arvoresPos[i]);
+  }
+  for (var j = pedrasPos.length - 1; j >= 0; j--) {
+    var dx2 = pedrasPos[j].x - cx;
+    var dz2 = pedrasPos[j].z - cz;
+    var localX2 = dx2 * cosR - dz2 * sinR;
+    var localZ2 = dx2 * sinR + dz2 * cosR;
+    if (Math.abs(localX2) < halfL && Math.abs(localZ2) < halfP) removerPedra(pedrasPos[j]);
+  }
+}
+
 // Limpa todas as arvores e pedras dentro de um circulo (legado, ainda usado se quiser)
 function limparVegetacaoCirculo(cx, cz, raio) {
   var raio2 = raio * raio;
