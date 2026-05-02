@@ -82,6 +82,9 @@ function entrarModoConstrucao() {
     mostrarDica('Clame um terreno antes de construir', 2500);
     return;
   }
+  // Libera pointer lock pra que o jogador possa clicar nos cards do painel
+  if (document.pointerLockElement) document.exitPointerLock();
+
   modoConstrucao = 'menu';
   document.getElementById('painel-construcao').classList.remove('oculto');
   // Atualiza estado de "disponivel" dos cards (custo vs inventario)
