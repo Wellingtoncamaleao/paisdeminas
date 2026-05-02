@@ -94,3 +94,13 @@ function apiOutrosPlayers() {
 function apiSalvarSpawn(x, z) {
   return apiFetch('state.php?action=salvar_spawn', { method: 'POST', body: { x: x, z: z } });
 }
+function apiMoverCabana(id, x, z, rotY) {
+  return apiFetch('state.php?action=mover_cabana', {
+    method: 'POST', body: { id: id, x: x, z: z, rotY: rotY }
+  });
+}
+function apiMoverFogueira(id, x, z) {
+  return apiFetch('state.php?action=mover_fogueira', {
+    method: 'POST', body: { id: id, x: x, z: z }
+  });
+}

@@ -147,6 +147,25 @@ if ($action === 'apagar_cabana') {
     jsonResposta(['ok' => true]);
 }
 
+if ($action === 'mover_cabana') {
+    $id = (int)($dados['id'] ?? 0);
+    $x = (float)($dados['x'] ?? 0);
+    $z = (float)($dados['z'] ?? 0);
+    $rotY = (float)($dados['rotY'] ?? 0);
+    $stmt = $pdo->prepare('UPDATE cabanas SET x = ?, z = ?, rot_y = ? WHERE id = ? AND player_id = ?');
+    $stmt->execute([$x, $z, $rotY, $id, $player['id']]);
+    jsonResposta(['ok' => true]);
+}
+
+if ($action === 'mover_fogueira') {
+    $id = (int)($dados['id'] ?? 0);
+    $x = (float)($dados['x'] ?? 0);
+    $z = (float)($dados['z'] ?? 0);
+    $stmt = $pdo->prepare('UPDATE fogueiras SET x = ?, z = ? WHERE id = ? AND player_id = ?');
+    $stmt->execute([$x, $z, $id, $player['id']]);
+    jsonResposta(['ok' => true]);
+}
+
 if ($action === 'salvar_fogueira') {
     $x = (float)($dados['x'] ?? 0);
     $z = (float)($dados['z'] ?? 0);

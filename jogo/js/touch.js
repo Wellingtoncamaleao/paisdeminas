@@ -59,6 +59,13 @@ function criarUiTouch() {
   btnCasa.textContent = 'CASA';
   document.body.appendChild(btnCasa);
 
+  // Botao "Mover" — entra modo mover; quando ativo, vira "ROTAC." pra rotacionar
+  var btnMov = document.createElement('button');
+  btnMov.id = 'btn-mover';
+  btnMov.className = 'btn-touch btn-mover';
+  btnMov.textContent = 'MOVER';
+  document.body.appendChild(btnMov);
+
   // Bind dos botoes
   bindBotaoToggle('btn-correr', 'ShiftLeft');
   bindBotaoTap('btn-coletar', function() { if (typeof tentarColeta === 'function') tentarColeta(); });
@@ -71,6 +78,25 @@ function criarUiTouch() {
   });
   bindBotaoTap('btn-casa', function() {
     if (typeof voltarParaCasa === 'function') voltarParaCasa();
+  });
+  bindBotaoTap('btn-mover', function() {
+    if (typeof toggleMover === 'function') toggleMover();
+    var b = document.getElementById('btn-mover');
+    if (b) b.textContent = (typeof modoMover !== 'undefined' && modoMover) ? 'SOLTAR' : 'MOVER';
+    // Mostra/esconde botão rotacionar enquanto move
+    var btnR = document.getElementById('btn-rotacionar-mov');
+    if (btnR) btnR.style.display = (typeof modoMover !== 'undefined' && modoMover) ? '' : 'none';
+  });
+
+  // Botao secundario "ROTAC." — só visível durante modo mover
+  var btnRotMov = document.createElement('button');
+  btnRotMov.id = 'btn-rotacionar-mov';
+  btnRotMov.className = 'btn-touch btn-rot-mov';
+  btnRotMov.textContent = 'ROTAC.';
+  btnRotMov.style.display = 'none';
+  document.body.appendChild(btnRotMov);
+  bindBotaoTap('btn-rotacionar-mov', function() {
+    if (typeof rotacionarObjMovendo === 'function') rotacionarObjMovendo();
   });
 }
 

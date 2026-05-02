@@ -96,6 +96,7 @@ function animar() {
   atualizarFumaca(delta);
   atualizarFogueiras(delta);
   atualizarOutrosJogadores(delta);
+  if (typeof atualizarMover === 'function') atualizarMover(delta);
   atualizarAudio(delta);
   enviarPingPosicao();
 

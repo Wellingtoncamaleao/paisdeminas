@@ -28,15 +28,28 @@ function carregarCabanasSalvas() {
       raioColisao: grupo.userData.raioColisao
     };
     cabanasConstruidas.push(cabanaCarregada);
-    var paredes = obterColisaoCabana(item.tipo, item.x, item.z, item.rotY || 0);
-    for (var pj = 0; pj < paredes.length; pj++) paredesCabana.push(paredes[pj]);
+    adicionarParedesCabana(item.id, item.tipo, item.x, item.z, item.rotY || 0);
     if (typeof limparVegetacaoBboxCabana === 'function') {
       limparVegetacaoBboxCabana(cabanaCarregada);
     }
   }
 }
 
-// Salvar cabana é feito direto na confirmação via apiSalvarCabana — não há sync em batch.
+// Adiciona paredes de uma cabana ao array de colisao, taggeadas com cabanaId
+// (permite remover/atualizar dinamicamente se a cabana for movida)
+function adicionarParedesCabana(cabanaId, tipo, x, z, rotY) {
+  var paredes = obterColisaoCabana(tipo, x, z, rotY);
+  for (var i = 0; i < paredes.length; i++) {
+    paredes[i].cabanaId = cabanaId;
+    paredesCabana.push(paredes[i]);
+  }
+}
+
+function removerParedesCabana(cabanaId) {
+  for (var i = paredesCabana.length - 1; i >= 0; i--) {
+    if (paredesCabana[i].cabanaId === cabanaId) paredesCabana.splice(i, 1);
+  }
+}
 
 function conectarUiConstrucao() {
   // Botao X de fechar painel
@@ -311,17 +324,27 @@ async function confirmarConstrucao() {
   cabanasConstruidas.push(novaCabana);
 
   // Adiciona paredes da cabana como obstaculos (com abertura na porta)
-  var paredes = obterColisaoCabana(tipo, x, z, rotY);
-  for (var pi = 0; pi < paredes.length; pi++) paredesCabana.push(paredes[pi]);
+  // novaCabana ainda não tem id (servidor responde depois). Usar referencia mesh como id temporario.
+  var idTmp = 'tmp-' + Date.now();
+  novaCabana.idTmp = idTmp;
+  adicionarParedesCabana(idTmp, tipo, x, z, rotY);
 
   // Limpa arvores/pedras que estejam dentro do bbox da cabana
   if (typeof limparVegetacaoBboxCabana === 'function') {
     limparVegetacaoBboxCabana(novaCabana);
   }
 
-  // Persiste no servidor (sem await pra nao travar UI; falha = jogador perde no proximo load mas nao pode-se fazer muito)
+  // Persiste no servidor — quando volta o id, atualiza tag das paredes
   apiSalvarCabana({ tipo: tipo, x: x, z: z, rotY: rotY })
-    .then(function(resp) { novaCabana.id = resp.id; })
+    .then(function(resp) {
+      novaCabana.id = resp.id;
+      // Re-tag paredes do idTmp pro id real
+      for (var p = 0; p < paredesCabana.length; p++) {
+        if (paredesCabana[p].cabanaId === novaCabana.idTmp) {
+          paredesCabana[p].cabanaId = resp.id;
+        }
+      }
+    })
     .catch(function(e) { console.warn('Falha ao salvar cabana:', e); });
 
   // Fumaca subindo da chamine (so cabana media e grande tem chamine)

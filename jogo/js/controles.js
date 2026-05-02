@@ -18,9 +18,16 @@ function iniciarControles() {
         if (e.code === 'KeyE' && typeof tentarColeta === 'function') tentarColeta();
         if (e.code === 'KeyB' && typeof entrarModoConstrucao === 'function') entrarModoConstrucao();
         if (e.code === 'KeyH' && typeof voltarParaCasa === 'function') voltarParaCasa();
-        if (e.code === 'KeyR' && modoConstrucao === 'posicionando') rotacionarFantasma();
+        if (e.code === 'KeyM' && typeof toggleMover === 'function' && modoConstrucao === 'fechado') toggleMover();
+        if (e.code === 'KeyR') {
+          if (modoConstrucao === 'posicionando') rotacionarFantasma();
+          else if (typeof modoMover !== 'undefined' && modoMover) rotacionarObjMovendo();
+        }
         if (e.code === 'Enter' && modoConstrucao === 'posicionando') confirmarConstrucao();
-        if (e.code === 'Escape' && modoConstrucao !== 'fechado') cancelarConstrucao();
+        if (e.code === 'Escape') {
+          if (modoConstrucao !== 'fechado') cancelarConstrucao();
+          else if (typeof modoMover !== 'undefined' && modoMover) cancelarMover();
+        }
       }
       // V (cycla camera) sempre disponivel
       if (e.code === 'KeyV' && typeof proximoPresetCamera === 'function') proximoPresetCamera();

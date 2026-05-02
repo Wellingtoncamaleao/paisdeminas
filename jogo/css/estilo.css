@@ -535,6 +535,28 @@ body.mobile #btn-casa.btn-casa {
   touch-action: none;
 }
 
+body.mobile #btn-mover.btn-mover {
+  position: fixed;
+  top: 9.6rem;
+  left: 0.8rem;
+  width: 64px;
+  height: 64px;
+  font-size: 0.6rem;
+  z-index: 50;
+  touch-action: none;
+}
+
+body.mobile #btn-rotacionar-mov.btn-rot-mov {
+  position: fixed;
+  top: 14rem;
+  left: 0.8rem;
+  width: 64px;
+  height: 64px;
+  font-size: 0.6rem;
+  z-index: 50;
+  touch-action: none;
+}
+
 /* HUD inventario menor em mobile */
 body.mobile #hud-inventario {
   top: 0.8rem;
@@ -831,6 +853,8 @@ body.mobile .btn-construcao {
   body.mobile #botoes-touch,
   body.mobile #btn-camera,
   body.mobile #btn-casa,
+  body.mobile #btn-mover,
+  body.mobile #btn-rotacionar-mov,
   body.mobile #hud-inventario,
   body.mobile #hud-relogio,
   body.mobile #hud-dica,
@@ -887,5 +911,19 @@ body.mobile .btn-construcao {
     width: 56px;
     height: 56px;
     font-size: 0.6rem;
+  }
+  body.mobile #btn-mover.btn-mover {
+    top: 8rem;
+    left: 0.5rem;
+    width: 56px;
+    height: 56px;
+    font-size: 0.55rem;
+  }
+  body.mobile #btn-rotacionar-mov.btn-rot-mov {
+    top: 11.8rem;
+    left: 0.5rem;
+    width: 56px;
+    height: 56px;
+    font-size: 0.55rem;
   }
 }
