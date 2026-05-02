@@ -24,18 +24,20 @@ function atualizarOutrosJogadores(delta) {
     pollOutros();
   }
 
-  // Smooth interpolation + bobbing dos avatares
+  // Smooth interpolation + animacao articulada dos avatares
   var k = Math.min(delta * 6, 1);
   for (var id in avataresOutros) {
     var av = avataresOutros[id];
 
-    // Distancia ao alvo XZ — pra saber se ta movendo (decide bobbing)
+    // Distancia ao alvo XZ — pra saber se ta movendo (e correndo, se rapido)
     var dxA = av.alvoPos.x - av.mesh.position.x;
     var dzA = av.alvoPos.z - av.mesh.position.z;
     var distQuad = dxA * dxA + dzA * dzA;
-    var movendo = distQuad > 0.04; // > 0.2m de diferenca
+    var andando = distQuad > 0.04;
+    // Heuristica: movimento rapido entre updates = correndo
+    var correndo = distQuad > 1.0;
 
-    // Lerp X e Z separadamente (Y eh controlado pelo bobbing)
+    // Lerp X e Z separadamente
     av.mesh.position.x += dxA * k;
     av.mesh.position.z += dzA * k;
 
@@ -45,14 +47,9 @@ function atualizarOutrosJogadores(delta) {
     while (diff < -Math.PI) diff += Math.PI * 2;
     av.mesh.rotation.y += diff * Math.min(delta * 6, 1);
 
-    // Bobbing: oscilacao vertical leve quando andando
-    if (movendo) {
-      av.fasePasso = (av.fasePasso || 0) + delta * 9;
-      av.mesh.position.y = Math.abs(Math.sin(av.fasePasso)) * 0.07;
-    } else {
-      av.mesh.position.y *= 0.85;
-      if (av.mesh.position.y < 0.001) av.mesh.position.y = 0;
-      av.fasePasso = 0;
+    // Anima membros articulados (mesma cinematica do player principal)
+    if (typeof animarColono === 'function' && av.mesh.userData && av.mesh.userData.corpoGrupo) {
+      animarColono(av.mesh, { andando: andando, correndo: correndo, delta: delta });
     }
   }
 }
@@ -224,94 +221,12 @@ function sincronizarFogueiras(lista) {
   }
 }
 
-// Avatar humanoide completo pra outros jogadores — mesma estrutura do
-// personagem proprio, mas sem animacao de membros (bobbing apenas).
-// Cor de camisa unica por player (hash do nome).
+// Avatar humanoide completo pra outros jogadores — reusa criarCorpoColono
+// (mesma estrutura articulada do personagem proprio). Cor de camisa unica
+// por player (hash do nome).
 function criarAvatarOutroJogador(corCamisa, nome) {
-  var grupo = new THREE.Group();
   var corCamisaHex = corHslParaHex(corCamisa) || 0x7a4a26;
-
-  // Tronco (camisa)
-  var tronco = new THREE.Mesh(
-    new THREE.CapsuleGeometry(0.28, 0.55, 4, 8),
-    new THREE.MeshLambertMaterial({ color: corCamisaHex })
-  );
-  tronco.position.y = 1.05;
-  tronco.castShadow = true;
-  grupo.add(tronco);
-
-  // Cabeca
-  var cabeca = new THREE.Mesh(
-    new THREE.SphereGeometry(0.22, 12, 10),
-    new THREE.MeshLambertMaterial({ color: 0xd49060 })
-  );
-  cabeca.position.y = 1.62;
-  cabeca.castShadow = true;
-  grupo.add(cabeca);
-
-  // Cabelo (hemisferio escuro embaixo do chapeu)
-  var cabeloGeo = new THREE.SphereGeometry(0.235, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2);
-  var cabelo = new THREE.Mesh(cabeloGeo, new THREE.MeshLambertMaterial({ color: 0x2a1810 }));
-  cabelo.position.y = 1.66;
-  cabelo.scale.y = 0.7;
-  cabelo.castShadow = true;
-  grupo.add(cabelo);
-
-  // Chapeu (cone + aba)
-  var chap = new THREE.Mesh(
-    new THREE.ConeGeometry(0.18, 0.18, 12),
-    new THREE.MeshLambertMaterial({ color: 0xc8a060 })
-  );
-  chap.position.y = 1.85;
-  chap.castShadow = true;
-  grupo.add(chap);
-  var aba = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.34, 0.34, 0.04, 16),
-    new THREE.MeshLambertMaterial({ color: 0xc8a060 })
-  );
-  aba.position.y = 1.78;
-  aba.castShadow = true;
-  grupo.add(aba);
-
-  // Cinto + fivela
-  var cinto = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.32, 0.32, 0.1, 16),
-    new THREE.MeshLambertMaterial({ color: 0x4a2812 })
-  );
-  cinto.position.y = 0.88;
-  grupo.add(cinto);
-  var fivela = new THREE.Mesh(
-    new THREE.BoxGeometry(0.08, 0.08, 0.04),
-    new THREE.MeshLambertMaterial({ color: 0xa68040 })
-  );
-  fivela.position.set(0, 0.88, 0.32);
-  grupo.add(fivela);
-
-  // Duas pernas (cilindros separados)
-  var calcaMat = new THREE.MeshLambertMaterial({ color: 0x3d2812 });
-  var pernaGeo = new THREE.CylinderGeometry(0.09, 0.07, 0.65, 6);
-  var pernaE = new THREE.Mesh(pernaGeo, calcaMat);
-  pernaE.position.set(0.13, 0.35, 0);
-  pernaE.castShadow = true;
-  grupo.add(pernaE);
-  var pernaD = new THREE.Mesh(pernaGeo, calcaMat);
-  pernaD.position.set(-0.13, 0.35, 0);
-  pernaD.castShadow = true;
-  grupo.add(pernaD);
-
-  // Sandalias (boxes achatadas)
-  var sandMat = new THREE.MeshLambertMaterial({ color: 0x6a3818 });
-  var sandGeo = new THREE.BoxGeometry(0.2, 0.05, 0.27);
-  var sandE = new THREE.Mesh(sandGeo, sandMat);
-  sandE.position.set(0.13, 0.025, 0.05);
-  sandE.castShadow = true;
-  grupo.add(sandE);
-  var sandD = new THREE.Mesh(sandGeo, sandMat);
-  sandD.position.set(-0.13, 0.025, 0.05);
-  sandD.castShadow = true;
-  grupo.add(sandD);
-
-  return grupo;
+  return criarCorpoColono(corCamisaHex);
 }
 
 // Converte 'hsl(120, 50%, 35%)' (string) pra hex (0xRRGGBB)
