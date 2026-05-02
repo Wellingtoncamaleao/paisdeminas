@@ -68,14 +68,46 @@ function criarCorpoColono(corCamisa) {
   cabelo.castShadow = true;
   corpoGrupo.add(cabelo);
 
-  // Barba
+  // Barba — cone mais largo pra ser visivel de longe
   var barba = new THREE.Mesh(
-    new THREE.ConeGeometry(0.14, 0.18, 8),
+    new THREE.ConeGeometry(0.16, 0.20, 8),
     new THREE.MeshLambertMaterial({ color: corBarba })
   );
-  barba.position.set(0, 1.48, 0.05);
+  barba.position.set(0, 1.50, 0.10);
   barba.rotation.x = Math.PI;
+  barba.scale.z = 0.7;
   corpoGrupo.add(barba);
+
+  // Olhos — 2 esferinhas pretas
+  var matOlho = new THREE.MeshLambertMaterial({ color: 0x1a0d05 });
+  var olhoGeo = new THREE.SphereGeometry(0.025, 8, 6);
+  var olhoEsq = new THREE.Mesh(olhoGeo, matOlho);
+  olhoEsq.position.set(0.07, 1.65, 0.20);
+  corpoGrupo.add(olhoEsq);
+  var olhoDir = new THREE.Mesh(olhoGeo, matOlho);
+  olhoDir.position.set(-0.07, 1.65, 0.20);
+  corpoGrupo.add(olhoDir);
+
+  // Sobrancelhas — 2 boxes finas escuras
+  var matSobr = new THREE.MeshLambertMaterial({ color: corBarba });
+  var sobrGeo = new THREE.BoxGeometry(0.06, 0.012, 0.025);
+  var sobrEsq = new THREE.Mesh(sobrGeo, matSobr);
+  sobrEsq.position.set(0.07, 1.69, 0.205);
+  sobrEsq.rotation.z = -0.1;
+  corpoGrupo.add(sobrEsq);
+  var sobrDir = new THREE.Mesh(sobrGeo, matSobr);
+  sobrDir.position.set(-0.07, 1.69, 0.205);
+  sobrDir.rotation.z = 0.1;
+  corpoGrupo.add(sobrDir);
+
+  // Nariz — cone pequeno cor de pele
+  var nariz = new THREE.Mesh(
+    new THREE.ConeGeometry(0.025, 0.06, 6),
+    new THREE.MeshLambertMaterial({ color: 0xc07850 })
+  );
+  nariz.position.set(0, 1.60, 0.22);
+  nariz.rotation.x = Math.PI / 2;
+  corpoGrupo.add(nariz);
 
   // Chapeu (cone + aba)
   var chapeuMat = new THREE.MeshLambertMaterial({ color: corChapeu });
