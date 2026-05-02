@@ -49,16 +49,33 @@ function criarColonoComAnimacao(corCamisa) {
   window.modeloColonoGLB.animations.forEach(function(clip) {
     actions[clip.name] = mixer.clipAction(clip);
   });
-  // Idle inicia tocando
-  var idle = actions['Idle'] || actions['idle'] || Object.values(actions)[0];
-  if (idle) idle.play();
+  // Idle inicia tocando — usa MAPA_ANIMS pra cobrir nomes Meshy/Three.js
+  var nomeIdle = escolherClip(actions, 'idle') || Object.keys(actions)[0];
+  if (nomeIdle) actions[nomeIdle].play();
 
   grupo.userData = {
     mixer: mixer,
     actions: actions,
-    estadoAnim: idle ? Object.keys(actions).find(function(k){return actions[k]===idle;}) : null
+    estadoAnim: nomeIdle
   };
   return grupo;
+}
+
+// Mapping de estados do jogo pra nomes de clip do GLB.
+// Cobre nomes do Meshy (Walking/Running/Long_Breathe_and_Look_Around),
+// Soldier de threejs.org (Walk/Run/Idle) e variacoes minusculas.
+var MAPA_ANIMS = {
+  idle: ['Idle', 'idle', 'Long_Breathe_and_Look_Around', 'Breathing', 'breathe', 'Idle_Loop'],
+  walk: ['Walk', 'walk', 'Walking', 'walking', 'Walk_Loop'],
+  run:  ['Run',  'run',  'Running', 'running', 'Run_Loop']
+};
+
+function escolherClip(actions, estado) {
+  var nomes = MAPA_ANIMS[estado] || [];
+  for (var i = 0; i < nomes.length; i++) {
+    if (actions[nomes[i]]) return nomes[i];
+  }
+  return null;
 }
 
 // Cinematica: faz crossfade entre Idle/Walk/Run conforme estado
@@ -67,20 +84,17 @@ function animarColonoGLB(grupo, estado) {
   if (!u || !u.mixer) return;
   u.mixer.update(estado.delta || 0);
 
-  var alvo;
-  if (estado.andando) alvo = estado.correndo ? 'Run' : 'Walk';
-  else alvo = 'Idle';
+  var alvoLogico;
+  if (estado.andando) alvoLogico = estado.correndo ? 'run' : 'walk';
+  else alvoLogico = 'idle';
 
-  // Fallback se modelo tiver nomes diferentes
-  if (!u.actions[alvo]) {
-    var alts = { Run: 'run', Walk: 'walk', Idle: 'idle' };
-    alvo = alts[alvo] || Object.keys(u.actions)[0];
-  }
-  if (u.estadoAnim === alvo || !u.actions[alvo]) return;
+  var alvoNome = escolherClip(u.actions, alvoLogico);
+  if (!alvoNome) return;
+  if (u.estadoAnim === alvoNome) return;
 
   var anterior = u.estadoAnim ? u.actions[u.estadoAnim] : null;
-  var proxima = u.actions[alvo];
+  var proxima = u.actions[alvoNome];
   if (anterior) anterior.fadeOut(0.18);
   proxima.reset().fadeIn(0.18).play();
-  u.estadoAnim = alvo;
+  u.estadoAnim = alvoNome;
 }
