@@ -51,10 +51,11 @@ function criarColonoComAnimacao(corCamisa) {
       if (o.material) {
         var origs = Array.isArray(o.material) ? o.material : [o.material];
         var lamberts = origs.map(function(m) {
+          // skinning eh detectado automaticamente pelo Three.js quando o material
+          // eh usado em SkinnedMesh. NAO passar skinning:true (deprecated em r155+).
           var mat = new THREE.MeshLambertMaterial({
             map: m.map || null,
-            color: corPlayer.clone(),
-            skinning: true
+            color: corPlayer.clone()
           });
           return mat;
         });
