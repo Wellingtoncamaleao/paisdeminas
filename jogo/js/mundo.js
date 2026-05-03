@@ -87,10 +87,24 @@ function iniciarMundo() {
   cena.add(terrenoMesh);
 
   // Plano "agua/oceano" abaixo + ao redor do estado — preenche o que esta fora
-  // da silhueta com cor de mar/distancia. Tamanho generoso pra cobrir todo o
-  // far da camera mesmo nas pontas do estado.
-  var bordaGeo = new THREE.PlaneGeometry(largMundo * 2.5, profMundo * 2.5, 1, 1);
-  var bordaMat = new THREE.MeshBasicMaterial({ color: 0x3a5a78, fog: true });
+  // da silhueta com cor de mar/distancia. Subdividido (96x72) pra que as
+  // ondas do shader (agua.js) tenham resolucao visivel mesmo cobrindo area
+  // gigante. Material idem rio (criarMaterialAgua) com eixoAltura='z' (plano
+  // rotacionado -PI/2 em X — Z local vira Y mundo) e ondas mais lentas/largas.
+  var bordaGeo = new THREE.PlaneGeometry(largMundo * 2.5, profMundo * 2.5, 96, 72);
+  var bordaMat = (typeof criarMaterialAgua === 'function')
+    ? criarMaterialAgua({
+        eixoAltura: 'z',         // plano rotacionado -PI/2 em X
+        amplitude: 0.5,
+        frequencia: 0.04,        // ondas largas pra escala oceanica
+        velocidadeOnda: 0.5,     // movimento mais lento
+        corSuperficie: 0x4a8ab0,
+        corFundo: 0x16385c,
+        corEspuma: 0xc8d8e0,
+        espumaBordas: false,     // sem foam nas bordas (oceano nao tem margem visual)
+        opacidade: 1.0
+      })
+    : new THREE.MeshBasicMaterial({ color: 0x3a5a78, fog: true });
   var bordaMesh = new THREE.Mesh(bordaGeo, bordaMat);
   bordaMesh.rotation.x = -Math.PI / 2;
   if (typeof MG_BOUNDS !== 'undefined') {

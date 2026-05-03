@@ -24,7 +24,11 @@ function iniciarRio() {
   ];
   rioSpline = new THREE.CatmullRomCurve3(pontosRio, false, 'catmullrom', 0.4);
 
+  // Subdivisao transversal pra que as ondas do shader (agua.js) tenham
+  // resolucao suficiente pra deformar a malha visualmente. 8 vertices por
+  // secao = 7 quads na largura. Comprimento mantem 360 segs (~2880 vertices).
   var segmentos = 360;
+  var subdivLarg = 8;
   var vertices = [];
   var uvs = [];
   var indices = [];
@@ -37,24 +41,25 @@ function iniciarRio() {
     var len = Math.sqrt(perpX * perpX + perpZ * perpZ);
     perpX /= len; perpZ /= len;
 
-    // Rio acompanha o terreno (relevo da Fase B). VALES_MG no relevo.js cava
-    // o solo onde o rio passa, deixando a agua naturalmente em depressao.
-    var xL = ponto.x + perpX * LARGURA_RIO;
-    var zL = ponto.z + perpZ * LARGURA_RIO;
-    var xR = ponto.x - perpX * LARGURA_RIO;
-    var zR = ponto.z - perpZ * LARGURA_RIO;
-    var yL = ((typeof alturaEm === 'function') ? alturaEm(xL, zL) : 0) + 0.05;
-    var yR = ((typeof alturaEm === 'function') ? alturaEm(xR, zR) : 0) + 0.05;
-
-    vertices.push(xL, yL, zL);
-    uvs.push(0, t * 40);
-    vertices.push(xR, yR, zR);
-    uvs.push(1, t * 40);
+    // Gera subdivLarg vertices ao longo da largura do rio (de -LARGURA a +LARGURA).
+    // Cada um pega altura do terreno onde cai (Fase B) — VALES_MG cava o solo.
+    for (var j = 0; j < subdivLarg; j++) {
+      var u = j / (subdivLarg - 1);            // 0..1
+      var lateral = (u - 0.5) * 2;             // -1..+1
+      var x = ponto.x + perpX * LARGURA_RIO * lateral;
+      var z = ponto.z + perpZ * LARGURA_RIO * lateral;
+      var y = ((typeof alturaEm === 'function') ? alturaEm(x, z) : 0) + 0.05;
+      vertices.push(x, y, z);
+      uvs.push(u, t * 40);
+    }
 
     if (i < segmentos) {
-      var a = i * 2;
-      indices.push(a, a + 2, a + 1);
-      indices.push(a + 1, a + 2, a + 3);
+      // Triangula cada faixa entre seccoes consecutivas
+      for (var k = 0; k < subdivLarg - 1; k++) {
+        var a = i * subdivLarg + k;
+        indices.push(a, a + subdivLarg, a + 1);
+        indices.push(a + 1, a + subdivLarg, a + subdivLarg + 1);
+      }
     }
   }
 
@@ -64,17 +69,24 @@ function iniciarRio() {
   geo.setIndex(indices);
   geo.computeVertexNormals();
 
-  // Material agua: azul com leve transparencia + emissive sutil pra reflexo
-  var mat = new THREE.MeshStandardMaterial({
-    color: 0x3a7ab8,
-    emissive: 0x1a4068,
-    emissiveIntensity: 0.4,
-    roughness: 0.25,
-    metalness: 0.1,
-    side: THREE.DoubleSide,
-    transparent: true,
-    opacity: 0.85
-  });
+  // Agua estilizada — vertex shader com ondas + gradiente raso/fundo + foam
+  // nas margens. agua.js define o material; aqui parametriza pro rio.
+  var mat = (typeof criarMaterialAgua === 'function')
+    ? criarMaterialAgua({
+        eixoAltura: 'y',         // mesh nao rotacionado, altura = Y
+        amplitude: 0.25,         // ondas modestas (rio calmo)
+        frequencia: 0.08,        // ondas largas (~78u de periodo)
+        velocidadeOnda: 1.0,
+        corSuperficie: 0x6dc4d8, // turquesa claro
+        corFundo: 0x2a5a88,      // azul medio (rio nao e tao profundo)
+        corEspuma: 0xeaf3f7,
+        espumaBordas: true,      // foam nas margens
+        opacidade: 0.94
+      })
+    : new THREE.MeshStandardMaterial({
+        color: 0x3a7ab8, transparent: true, opacity: 0.85,
+        side: THREE.DoubleSide
+      });
 
   rioMesh = new THREE.Mesh(geo, mat);
   rioMesh.receiveShadow = true;

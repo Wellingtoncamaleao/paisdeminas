@@ -113,6 +113,7 @@ function animar() {
   atualizarOutrosJogadores(delta);
   if (typeof atualizarAnimais === 'function') atualizarAnimais(delta);
   if (typeof atualizarMover === 'function') atualizarMover(delta);
+  if (typeof atualizarAguas === 'function') atualizarAguas(delta);
   atualizarAudio(delta);
   enviarPingPosicao();
 
