@@ -74,23 +74,44 @@ function carregarModelosVegetacao() {
   return Promise.all(promises);
 }
 
+// Paleta tropical brasileira — override de cores Quaternius (que vem outono)
+function corPaletaPorMaterial(nome) {
+  if (!nome) return null;
+  if (/Leaf_Pine|Leaves_Pine/i.test(nome)) return 0x3a6a30;     // pinheiro verde escuro
+  if (/Leaves_TwistedTree/i.test(nome))    return 0x5a8030;     // verde-amarelo
+  if (/Leaves_NormalTree|Leaves/i.test(nome)) return 0x4a8033;  // verde tropical medio
+  if (/Bark_DeadTree/i.test(nome))         return 0x6a5040;     // morta cinza-bege
+  if (/Bark_TwistedTree/i.test(nome))      return 0x6a4a26;     // marrom escuro
+  if (/Bark|Tree|Trunk/i.test(nome))       return 0x7a5230;     // marrom comum
+  if (/Rocks?/i.test(nome))                return 0x9a9a96;     // cinza pedra
+  if (/Grass/i.test(nome))                 return 0x6a9a3a;     // verde grass claro
+  if (/Bush/i.test(nome))                  return 0x4a7028;     // verde bush
+  if (/Fern/i.test(nome))                  return 0x4a8030;     // verde fern
+  if (/Mushroom/i.test(nome))              return null;         // mantem cor original
+  return null;
+}
+
 // Extrai sub-meshes do GLTF com geometry + material + matrix absoluta no root.
-// Retorna array de { geometry, material, matrixBase }.
+// Material clonado e tintado pra paleta tropical brasileira.
 function extrairSubmeshes(gltf) {
   var subs = [];
   gltf.scene.updateMatrixWorld(true);
   gltf.scene.traverse(function(o) {
-    if (o.isMesh) {
-      // Garante colorSpace correto nas texturas (consistente com modelo3d.js)
-      if (o.material) {
-        var mats = Array.isArray(o.material) ? o.material : [o.material];
-        mats.forEach(function(m) {
-          if (m.map) m.map.colorSpace = THREE.SRGBColorSpace;
-        });
+    if (o.isMesh && o.material) {
+      var matOrig = Array.isArray(o.material) ? o.material[0] : o.material;
+      var nome = matOrig.name || '';
+      var matNovo = matOrig.clone();
+      if (matNovo.map) matNovo.map.colorSpace = THREE.SRGBColorSpace;
+      var corPaleta = corPaletaPorMaterial(nome);
+      if (corPaleta !== null) {
+        matNovo.color.setHex(corPaleta);
       }
+      // Garante que nao fica brilhoso/metalico
+      if ('roughness' in matNovo) matNovo.roughness = 0.95;
+      if ('metalness' in matNovo) matNovo.metalness = 0.0;
       subs.push({
         geometry: o.geometry,
-        material: o.material,
+        material: matNovo,
         matrixBase: o.matrixWorld.clone()
       });
     }
