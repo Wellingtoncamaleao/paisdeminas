@@ -40,10 +40,19 @@ function iniciarTrilha() {
     perpX /= len;
     perpZ /= len;
 
+    // Trilha acompanha relevo: cada borda pega altura do terreno + 0.12 offset
+    // pra evitar Z-fighting com o chao
+    var xL = ponto.x + perpX * largura;
+    var zL = ponto.z + perpZ * largura;
+    var xR = ponto.x - perpX * largura;
+    var zR = ponto.z - perpZ * largura;
+    var yL = ((typeof alturaEm === 'function') ? alturaEm(xL, zL) : 0) + 0.12;
+    var yR = ((typeof alturaEm === 'function') ? alturaEm(xR, zR) : 0) + 0.12;
+
     // Borda esquerda
-    vertices.push(ponto.x + perpX * largura, 0.12, ponto.z + perpZ * largura);
+    vertices.push(xL, yL, zL);
     // Borda direita
-    vertices.push(ponto.x - perpX * largura, 0.12, ponto.z - perpZ * largura);
+    vertices.push(xR, yR, zR);
 
     if (i < segmentos) {
       var a = i * 2;

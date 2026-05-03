@@ -40,6 +40,10 @@ function atualizarOutrosJogadores(delta) {
     // Lerp X e Z separadamente
     av.mesh.position.x += dxA * k;
     av.mesh.position.z += dzA * k;
+    // Avatar gruda no terreno (Fase B): Y do mesh = altura do solo na pos atual
+    if (typeof alturaEm === 'function') {
+      av.mesh.position.y = alturaEm(av.mesh.position.x, av.mesh.position.z);
+    }
 
     // Rotacao suave em Y
     var diff = av.alvoRotY - av.mesh.rotation.y;
@@ -141,7 +145,7 @@ function sincronizarCabanas(lista) {
       var fab = FABRICAS_CABANA[cb.tipo];
       if (!fab) continue;
       var grupo = fab();
-      grupo.position.set(cb.x, 0, cb.z);
+      grupo.position.set(cb.x, alturaSeguraEm(cb.x, cb.z), cb.z);
       grupo.rotation.y = cb.rotY;
       cena.add(grupo);
       cabanasOutros[cb.id] = { mesh: grupo, x: cb.x, z: cb.z, rotY: cb.rotY, tipo: cb.tipo };
@@ -170,7 +174,7 @@ function sincronizarFogueiras(lista) {
     idsAtuais[f.id] = true;
     if (!fogueirasOutros[f.id]) {
       var grupo = criarFogueiraGrupo();
-      grupo.position.set(f.x, 0, f.z);
+      grupo.position.set(f.x, alturaSeguraEm(f.x, f.z), f.z);
       cena.add(grupo);
       fogueirasOutros[f.id] = { mesh: grupo, ativa: f.ativa };
       // Anima — joga no array global pra atualizarFogueiras animar a chama

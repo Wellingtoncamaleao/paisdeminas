@@ -31,10 +31,12 @@ function iniciarJogo() {
 
   relogio = new THREE.Clock();
 
-  // Ordem importa: mapa-mg → mundo → trilha → floresta (depende da trilha) → personagem → controles → camera → audio
+  // Ordem importa: mapa-mg → relevo → mundo → trilha → floresta → personagem...
   // mapa-mg.js gera a silhueta de MG (mask + bounds) usada por mundo, colisao,
   // floresta, spawn, claim — precisa rodar primeiro de tudo.
+  // relevo.js depende de mapa-mg.js (usa MG_BOUNDS pro mapa de altura).
   if (typeof iniciarMapaMG === 'function') iniciarMapaMG();
+  if (typeof iniciarRelevo === 'function') iniciarRelevo();
   iniciarMundo();
   inicializarEstrelas();   // depende do ceuGrupo criado em iniciarMundo
   iniciarTrilha();
@@ -77,7 +79,7 @@ function iniciarJogo() {
   // Login subsequente: posiciona no spawn salvo
   var spawn = window.estadoServidor && window.estadoServidor.player && window.estadoServidor.player.spawn;
   if (spawn) {
-    personagem.position.set(spawn.x, 0, spawn.z);
+    personagem.position.set(spawn.x, alturaSeguraEm(spawn.x, spawn.z), spawn.z);
   } else {
     // Sem spawn salvo: entra no modo "escolha onde nascer"
     if (typeof entrarModoEscolherSpawn === 'function') entrarModoEscolherSpawn();

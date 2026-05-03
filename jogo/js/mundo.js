@@ -14,51 +14,59 @@ function iniciarMundo() {
   // Neblina ampliada pro mundo grande (Fase A: silhueta MG ~2400x1800)
   cena.fog = new THREE.Fog(0xe8a872, 250, 1500);
 
-  // Terreno — usa o contorno de MG (mapa-mg.js) pra criar Shape recortado.
-  // Fora do estado fica "agua/desconhecido" (plano azul abaixo).
-  var temContorno = (typeof MG_CONTORNO !== 'undefined') && MG_CONTORNO.length > 0;
+  // Terreno — PlaneGeometry retangular subdividida cobrindo o bbox de MG.
+  // Cada vertice tem Y deslocado por relevo.alturaEm() (heightmap).
+  // Vertices fora da silhueta vao pra Y=PROFUNDIDADE_FORA (afundam → ficam abaixo
+  // do plano de "agua/oceano", criando borda visual nitida sem precisar recortar
+  // a malha. Permite heightmap (impossivel com ShapeGeometry sem subdivisao).
   var largMundo = (typeof MG_BOUNDS !== 'undefined') ? (MG_BOUNDS.xMax - MG_BOUNDS.xMin) : 2400;
   var profMundo = (typeof MG_BOUNDS !== 'undefined') ? (MG_BOUNDS.zMax - MG_BOUNDS.zMin) : 1800;
+  var temRelevo = (typeof alturaEm === 'function') && (typeof mapaAltura !== 'undefined') && mapaAltura;
 
-  var terrenoGeo;
-  if (temContorno) {
-    // Constroi Shape XY (depois rotaciona pra XZ junto com o mesh).
-    // Atencao: ShapeGeometry triangula no plano XY; nosso "z mundial" entra
-    // como Y do shape. Usa Y NEGATIVO pra preservar handedness (apos rotate -PI/2
-    // em X, o eixo Y do shape se torna -Z mundial → invertemos pra alinhar).
-    var shape = new THREE.Shape();
-    for (var ci = 0; ci < MG_CONTORNO.length; ci++) {
-      var px = MG_CONTORNO[ci].x;
-      var py = -MG_CONTORNO[ci].z; // inverte Z pra ficar correto apos rotation.x = -PI/2
-      if (ci === 0) shape.moveTo(px, py);
-      else shape.lineTo(px, py);
-    }
-    shape.closePath();
-    terrenoGeo = new THREE.ShapeGeometry(shape, 16);
-    // UV manual baseado em XY pra que repeticao de textura saia uniforme
+  // 240x180 segmentos = ~10u por segmento — suficiente pra sentir relevo de
+  // serras com raio 50-200u, sem matar performance (43k tris)
+  var segX = temRelevo ? 240 : 1;
+  var segZ = temRelevo ? 180 : 1;
+  var terrenoGeo = new THREE.PlaneGeometry(largMundo, profMundo, segX, segZ);
+
+  // Aplica heightmap em cada vertice. Coords da geometria estao no plano XY
+  // (Y negativo = sul mundo), entao temos que reverter pra X/Z mundo.
+  // Centro do plano = origem local (0,0). Posicao do mesh sera no centro do bbox.
+  if (temRelevo) {
     var posAttr = terrenoGeo.attributes.position;
-    var uvs = new Float32Array(posAttr.count * 2);
+    var centroX = (MG_BOUNDS.xMin + MG_BOUNDS.xMax) / 2;
+    var centroZ = (MG_BOUNDS.zMin + MG_BOUNDS.zMax) / 2;
     for (var vi = 0; vi < posAttr.count; vi++) {
-      uvs[vi * 2] = posAttr.getX(vi) / 8;     // 1 unidade de UV = 8m de mundo
-      uvs[vi * 2 + 1] = posAttr.getY(vi) / 8;
+      // Vertex em coords locais do plano (X, Y, 0) — antes da rotacao
+      var lx = posAttr.getX(vi);
+      var ly = posAttr.getY(vi);
+      // Mapeia pra coords de mundo (X mundo = lx + centroX; Z mundo = -ly + centroZ
+      // porque rotation.x=-PI/2 leva +Y → -Z)
+      var wx = lx + centroX;
+      var wz = -ly + centroZ;
+      var h = alturaEm(wx, wz);
+      // Z local do plano (que vira Y mundo apos rotacao) recebe altura
+      posAttr.setZ(vi, h);
     }
-    terrenoGeo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
-  } else {
-    // Fallback retangular (caso mapa-mg.js nao tenha sido carregado)
-    terrenoGeo = new THREE.PlaneGeometry(largMundo, profMundo, 1, 1);
+    posAttr.needsUpdate = true;
+    terrenoGeo.computeVertexNormals();
   }
 
   var terrenoMat = new THREE.MeshLambertMaterial({
     color: 0xffffff,
-    map: texturaGrama(),
-    side: THREE.DoubleSide  // garante render independente do winding do Shape
+    map: texturaGrama()
   });
   if (terrenoMat.map) {
     terrenoMat.map.wrapS = THREE.RepeatWrapping;
     terrenoMat.map.wrapT = THREE.RepeatWrapping;
+    terrenoMat.map.repeat.set(largMundo / 8, profMundo / 8);
   }
   terrenoMesh = new THREE.Mesh(terrenoGeo, terrenoMat);
   terrenoMesh.rotation.x = -Math.PI / 2;
+  if (typeof MG_BOUNDS !== 'undefined') {
+    terrenoMesh.position.x = (MG_BOUNDS.xMin + MG_BOUNDS.xMax) / 2;
+    terrenoMesh.position.z = (MG_BOUNDS.zMin + MG_BOUNDS.zMax) / 2;
+  }
   terrenoMesh.position.y = 0;
   terrenoMesh.receiveShadow = true;
   cena.add(terrenoMesh);
@@ -74,7 +82,7 @@ function iniciarMundo() {
     bordaMesh.position.x = (MG_BOUNDS.xMin + MG_BOUNDS.xMax) / 2;
     bordaMesh.position.z = (MG_BOUNDS.zMin + MG_BOUNDS.zMax) / 2;
   }
-  bordaMesh.position.y = -0.3; // logo abaixo do terreno
+  bordaMesh.position.y = -3; // bem abaixo de qualquer vale (max -1m em relevo.js)
   cena.add(bordaMesh);
 
   // Luz ambiente — azul-acinzentada do amanhecer (vinda de cima e do chao verde)

@@ -19,7 +19,7 @@ function carregarCabanasSalvas() {
     var fab = FABRICAS_CABANA[item.tipo];
     if (!fab) continue;
     var grupo = fab();
-    grupo.position.set(item.x, 0, item.z);
+    grupo.position.set(item.x, alturaSeguraEm(item.x, item.z), item.z);
     grupo.rotation.y = item.rotY || 0;
     cena.add(grupo);
     var cabanaCarregada = {
@@ -293,7 +293,7 @@ async function confirmarConstrucao() {
   cabanaFantasma = null;
 
   var grupo = FABRICAS_CABANA[tipo]();
-  grupo.position.set(x, 0, z);
+  grupo.position.set(x, alturaSeguraEm(x, z), z);
   grupo.rotation.y = rotY;
   cena.add(grupo);
 

@@ -16,7 +16,7 @@ function carregarFogueirasSalvas() {
   for (var i = 0; i < lista.length; i++) {
     var item = lista[i];
     var grupo = criarFogueiraGrupo();
-    grupo.position.set(item.x, 0, item.z);
+    grupo.position.set(item.x, alturaSeguraEm(item.x, item.z), item.z);
     cena.add(grupo);
 
     var f = {

@@ -35,7 +35,8 @@ function atualizarPilhas() {
     pilhaMadeiraGrupo.userData.eMovel = true;
     pilhaMadeiraGrupo.userData.tipoPilha = 'madeira';
     construirPilhaMadeira(pilhaMadeiraGrupo, nToras);
-    pilhaMadeiraGrupo.position.set(cx + offMad.x, 0, cz + offMad.z);
+    var pmx = cx + offMad.x, pmz = cz + offMad.z;
+    pilhaMadeiraGrupo.position.set(pmx, alturaSeguraEm(pmx, pmz), pmz);
     pilhaMadeiraGrupo.rotation.y = claimAtual.pilhaMadRot || 0;
     cena.add(pilhaMadeiraGrupo);
   }
@@ -45,7 +46,8 @@ function atualizarPilhas() {
     pilhaPedraGrupo.userData.eMovel = true;
     pilhaPedraGrupo.userData.tipoPilha = 'pedra';
     construirPilhaPedra(pilhaPedraGrupo, inventario.pedra);
-    pilhaPedraGrupo.position.set(cx + offPed.x, 0, cz + offPed.z);
+    var ppx = cx + offPed.x, ppz = cz + offPed.z;
+    pilhaPedraGrupo.position.set(ppx, alturaSeguraEm(ppx, ppz), ppz);
     pilhaPedraGrupo.rotation.y = claimAtual.pilhaPedRot || 0;
     cena.add(pilhaPedraGrupo);
   }

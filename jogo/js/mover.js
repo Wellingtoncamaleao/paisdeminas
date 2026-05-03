@@ -110,6 +110,10 @@ function atualizarMover(delta) {
   var z = personagem.position.z + dirZ * dist;
   objMovendo.ref.mesh.position.x = x;
   objMovendo.ref.mesh.position.z = z;
+  // Acompanha relevo (Fase B): Y vem do terreno na pos atual
+  if (typeof alturaEm === 'function') {
+    objMovendo.ref.mesh.position.y = alturaEm(x, z);
+  }
 }
 
 function rotacionarObjMovendo() {

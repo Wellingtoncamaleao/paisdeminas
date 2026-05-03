@@ -202,7 +202,7 @@ function voltarParaCasa() {
     if (typeof mostrarDica === 'function') mostrarDica('Você ainda não tem casa', 2500);
     return;
   }
-  personagem.position.set(alvo.x, 0, alvo.z);
+  personagem.position.set(alvo.x, alturaSeguraEm(alvo.x, alvo.z), alvo.z);
   if (typeof mostrarDica === 'function') mostrarDica('Voltou pra casa', 1500);
 }
 

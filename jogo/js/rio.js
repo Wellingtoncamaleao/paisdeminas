@@ -37,9 +37,18 @@ function iniciarRio() {
     var len = Math.sqrt(perpX * perpX + perpZ * perpZ);
     perpX /= len; perpZ /= len;
 
-    vertices.push(ponto.x + perpX * LARGURA_RIO, 0.05, ponto.z + perpZ * LARGURA_RIO);
+    // Rio acompanha o terreno (relevo da Fase B). VALES_MG no relevo.js cava
+    // o solo onde o rio passa, deixando a agua naturalmente em depressao.
+    var xL = ponto.x + perpX * LARGURA_RIO;
+    var zL = ponto.z + perpZ * LARGURA_RIO;
+    var xR = ponto.x - perpX * LARGURA_RIO;
+    var zR = ponto.z - perpZ * LARGURA_RIO;
+    var yL = ((typeof alturaEm === 'function') ? alturaEm(xL, zL) : 0) + 0.05;
+    var yR = ((typeof alturaEm === 'function') ? alturaEm(xR, zR) : 0) + 0.05;
+
+    vertices.push(xL, yL, zL);
     uvs.push(0, t * 40);
-    vertices.push(ponto.x - perpX * LARGURA_RIO, 0.05, ponto.z - perpZ * LARGURA_RIO);
+    vertices.push(xR, yR, zR);
     uvs.push(1, t * 40);
 
     if (i < segmentos) {

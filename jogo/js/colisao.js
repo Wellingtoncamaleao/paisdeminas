@@ -12,6 +12,10 @@ function podeMover(x, z) {
     return false;
   }
 
+  // Bloqueia subir paredes ingremes (encostas com inclinacao > 0.7 ~ 35deg).
+  // Fase B: relevo procedural — sem isso o player escalava montanhas verticais.
+  if (typeof inclinacaoEm === 'function' && inclinacaoEm(x, z) > 0.7) return false;
+
   // Arvores
   for (var i = 0; i < arvoresPos.length; i++) {
     var arv = arvoresPos[i];

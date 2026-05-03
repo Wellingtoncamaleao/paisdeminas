@@ -31,6 +31,16 @@ function sortearPosNoMapa(maxTentativas) {
   return { x: (Math.random() - 0.5) * 380, z: (Math.random() - 0.5) * 380 };
 }
 
+// Sorteia uma posicao aleatoria DENTRO da silhueta de MG (rejeicao via mask).
+// Fallback: range antigo +/- 190 caso mapa-mg.js nao esteja carregado.
+function sortearPosNoMapa(maxTentativas) {
+  if (typeof sortearPontoNoEstado === 'function') {
+    var p = sortearPontoNoEstado(maxTentativas || 30);
+    if (p) return p;
+  }
+  return { x: (Math.random() - 0.5) * 380, z: (Math.random() - 0.5) * 380 };
+}
+
 // Distribui N arvores entre os modelos da lista, evitando trilha.
 // Cria 1 InstancedMesh por sub-mesh por modelo. arvoresPos guarda ref pra
 // coleta funcionar (compativel com codigo antigo).
@@ -57,10 +67,14 @@ function criarFlorestaModelo(modelosIds, total, raioColisao, distMinTrilha) {
 
   while (colocadas < total && tentativas < maxTentativas) {
     tentativas++;
-    var x = (Math.random() - 0.5) * 380;
-    var z = (Math.random() - 0.5) * 380;
+    var pos = sortearPosNoMapa(8);
+    if (!pos) continue;
+    var x = pos.x;
+    var z = pos.z;
     if (distanciaAteTrilha(x, z) < distMinTrilha) continue;
     if (typeof distanciaAteRio === 'function' && distanciaAteRio(x, z) < LARGURA_RIO + 2) continue;
+    // Evita plantar em encostas muito ingremes (parede de serra)
+    if (typeof inclinacaoEm === 'function' && inclinacaoEm(x, z) > 0.45) continue;
 
     var modeloIdx = Math.floor(Math.random() * modelosIds.length);
     var insts = instsPorModelo[modeloIdx];
@@ -70,7 +84,8 @@ function criarFlorestaModelo(modelosIds, total, raioColisao, distMinTrilha) {
     var escala = 0.7 + Math.random() * 0.7;
     var rot = Math.random() * Math.PI * 2;
 
-    dummy.position.set(x, 0, z);
+    var yChao = (typeof alturaEm === 'function') ? alturaEm(x, z) : 0;
+    dummy.position.set(x, yChao, z);
     dummy.rotation.y = rot;
     dummy.scale.set(escala, escala, escala);
     dummy.updateMatrix();
@@ -114,7 +129,7 @@ function clonarMatrizes(meshInstanced) {
 // Pedras — usa Rock_Medium_1/2/3 e Pebble_Round
 function criarPedras() {
   var modelos = ['Rock_Medium_1', 'Rock_Medium_2', 'Rock_Medium_3', 'Pebble_Round_1', 'Pebble_Round_3'];
-  var total = 140;
+  var total = 1000;
 
   var instsPorModelo = modelos.map(function(id) {
     return criarInstancedDeModelo(id, total);
@@ -130,8 +145,10 @@ function criarPedras() {
 
   while (colocadas < total && tentativas < total * 10) {
     tentativas++;
-    var x = (Math.random() - 0.5) * 380;
-    var z = (Math.random() - 0.5) * 380;
+    var pos = sortearPosNoMapa(8);
+    if (!pos) continue;
+    var x = pos.x;
+    var z = pos.z;
     if (distanciaAteTrilha(x, z) < 4) continue;
     if (typeof distanciaAteRio === 'function' && distanciaAteRio(x, z) < LARGURA_RIO + 2) continue;
 
@@ -141,7 +158,8 @@ function criarPedras() {
     if (idx >= total) continue;
 
     var escala = 0.7 + Math.random() * 1.0;
-    dummy.position.set(x, 0, z);
+    var yChao = (typeof alturaEm === 'function') ? alturaEm(x, z) : 0;
+    dummy.position.set(x, yChao, z);
     dummy.rotation.set(0, Math.random() * Math.PI * 2, 0);
     dummy.scale.set(escala, escala, escala);
     dummy.updateMatrix();
@@ -164,7 +182,7 @@ function criarPedras() {
 // Vegetacao baixa: bushes, ferns, grass espalhados — decorativo, sem colisao
 function criarVegetacaoBaixa() {
   var modelos = ['Bush_Common', 'Bush_Common_Flowers', 'Bush_Large_Flowers', 'Fern_1', 'Grass_Common_Tall', 'Grass_Wispy_Tall', 'Flower_1_Clump'];
-  var total = 600;
+  var total = 4500;
 
   var instsPorModelo = modelos.map(function(id) {
     return criarInstancedDeModelo(id, total);
@@ -180,8 +198,10 @@ function criarVegetacaoBaixa() {
 
   while (colocadas < total && tentativas < total * 6) {
     tentativas++;
-    var x = (Math.random() - 0.5) * 380;
-    var z = (Math.random() - 0.5) * 380;
+    var pos = sortearPosNoMapa(8);
+    if (!pos) continue;
+    var x = pos.x;
+    var z = pos.z;
     if (distanciaAteTrilha(x, z) < 2.5) continue;
     if (typeof distanciaAteRio === 'function' && distanciaAteRio(x, z) < LARGURA_RIO + 1) continue;
 
@@ -191,7 +211,8 @@ function criarVegetacaoBaixa() {
     if (idx >= total) continue;
 
     var escala = 0.6 + Math.random() * 0.9;
-    dummy.position.set(x, 0, z);
+    var yChao = (typeof alturaEm === 'function') ? alturaEm(x, z) : 0;
+    dummy.position.set(x, yChao, z);
     dummy.rotation.y = Math.random() * Math.PI * 2;
     dummy.scale.set(escala, escala, escala);
     dummy.updateMatrix();
@@ -212,30 +233,35 @@ function criarManchasChao() {
   geoCirc.rotateX(-Math.PI / 2);
 
   var musgoMat = new THREE.MeshLambertMaterial({ color: 0x6a9c4a });
-  var musgo = new THREE.InstancedMesh(geoCirc, musgoMat, 180);
+  var musgo = new THREE.InstancedMesh(geoCirc, musgoMat, 1500);
   musgo.receiveShadow = true;
-  preencherManchas(musgo, 180, 0.05, 1.5, 3.5);
+  preencherManchas(musgo, 1500, 0.05, 1.5, 3.5);
   cena.add(musgo);
 
   var folhasMat = new THREE.MeshLambertMaterial({ color: 0x7a5a32 });
-  var folhas = new THREE.InstancedMesh(geoCirc, folhasMat, 130);
+  var folhas = new THREE.InstancedMesh(geoCirc, folhasMat, 1100);
   folhas.receiveShadow = true;
-  preencherManchas(folhas, 130, 0.06, 1.2, 2.8);
+  preencherManchas(folhas, 1100, 0.06, 1.2, 2.8);
   cena.add(folhas);
 }
 
 function preencherManchas(mesh, total, alturaY, escMin, escMax) {
   var dummy = new THREE.Object3D();
-  for (var i = 0; i < total; i++) {
-    var x = (Math.random() - 0.5) * 390;
-    var z = (Math.random() - 0.5) * 390;
+  var colocadas = 0;
+  var tentativas = 0;
+  while (colocadas < total && tentativas < total * 4) {
+    tentativas++;
+    var pos = sortearPosNoMapa(6);
+    if (!pos) continue;
     var esc = escMin + Math.random() * (escMax - escMin);
-    dummy.position.set(x, alturaY, z);
+    var yChao = (typeof alturaEm === 'function') ? alturaEm(pos.x, pos.z) : 0;
+    dummy.position.set(pos.x, yChao + alturaY, pos.z);
     dummy.rotation.y = Math.random() * Math.PI * 2;
     dummy.scale.set(esc, 1, esc);
     dummy.updateMatrix();
-    mesh.setMatrixAt(i, dummy.matrix);
+    mesh.setMatrixAt(colocadas, dummy.matrix);
+    colocadas++;
   }
-  mesh.count = total;
+  mesh.count = colocadas;
   mesh.instanceMatrix.needsUpdate = true;
 }

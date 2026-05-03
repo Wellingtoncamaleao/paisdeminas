@@ -32,7 +32,7 @@ function entrarModoEscolherSpawn() {
       break;
     }
   }
-  personagem.position.set(rx, 0, rz);
+  personagem.position.set(rx, alturaSeguraEm(rx, rz), rz);
 
   // Cria overlay com instrucao + botao
   if (!document.getElementById('overlay-spawn')) {
