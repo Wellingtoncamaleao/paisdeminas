@@ -109,6 +109,18 @@ function extrairSubmeshes(gltf) {
       // Garante que nao fica brilhoso/metalico
       if ('roughness' in matNovo) matNovo.roughness = 0.95;
       if ('metalness' in matNovo) matNovo.metalness = 0.0;
+      // Desliga transparencia (folhas Quaternius vem com alphaMap que renderiza
+      // preto quando o blending nao bate). Pra estilo cartoon basta opacidade total.
+      matNovo.transparent = false;
+      matNovo.alphaTest = 0.5;
+      matNovo.alphaMap = null;
+      matNovo.depthWrite = true;
+      matNovo.side = THREE.FrontSide;
+      // Boost emissive sutil pra folhas/troncos nao ficarem pretos em sombra
+      if (matNovo.emissive && corPaleta !== null) {
+        matNovo.emissive.setHex(corPaleta);
+        matNovo.emissiveIntensity = 0.18;
+      }
       subs.push({
         geometry: o.geometry,
         material: matNovo,
