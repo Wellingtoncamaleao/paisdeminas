@@ -32,10 +32,14 @@ function iniciarMundo() {
   // Aplica heightmap em cada vertice. Coords da geometria estao no plano XY
   // (Y negativo = sul mundo), entao temos que reverter pra X/Z mundo.
   // Centro do plano = origem local (0,0). Posicao do mesh sera no centro do bbox.
+  // Tambem aplica vertex colors por bioma (Fase C) — mata=verde escuro,
+  // cerrado=verde-amarelado, caatinga=ocre. Mistura suave nas fronteiras.
+  var temBiomas = (typeof corChaoEm === 'function');
   if (temRelevo) {
     var posAttr = terrenoGeo.attributes.position;
     var centroX = (MG_BOUNDS.xMin + MG_BOUNDS.xMax) / 2;
     var centroZ = (MG_BOUNDS.zMin + MG_BOUNDS.zMax) / 2;
+    var corBuf = temBiomas ? new Float32Array(posAttr.count * 3) : null;
     for (var vi = 0; vi < posAttr.count; vi++) {
       // Vertex em coords locais do plano (X, Y, 0) — antes da rotacao
       var lx = posAttr.getX(vi);
@@ -47,14 +51,25 @@ function iniciarMundo() {
       var h = alturaEm(wx, wz);
       // Z local do plano (que vira Y mundo apos rotacao) recebe altura
       posAttr.setZ(vi, h);
+      // Cor do vertice = bioma local (mistura ponderada)
+      if (temBiomas) {
+        var corV = corChaoEm(wx, wz);
+        corBuf[vi * 3]     = corV.r;
+        corBuf[vi * 3 + 1] = corV.g;
+        corBuf[vi * 3 + 2] = corV.b;
+      }
     }
     posAttr.needsUpdate = true;
+    if (corBuf) {
+      terrenoGeo.setAttribute('color', new THREE.BufferAttribute(corBuf, 3));
+    }
     terrenoGeo.computeVertexNormals();
   }
 
   var terrenoMat = new THREE.MeshLambertMaterial({
     color: 0xffffff,
-    map: texturaGrama()
+    map: texturaGrama(),
+    vertexColors: temBiomas
   });
   if (terrenoMat.map) {
     terrenoMat.map.wrapS = THREE.RepeatWrapping;

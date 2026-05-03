@@ -7,15 +7,18 @@ var pedrasPos = [];
 var copasParaVento = [];
 
 function iniciarFloresta() {
-  // Distribuicao baseada no que cobre bem a paisagem MG colonial.
-  // Totais escalados pro mundo grande (silhueta MG ~2400x1800, ~30x area antiga).
-  // Conservador (~8x) pra nao matar performance — Fase C ajusta por bioma.
-  criarFlorestaModelo(['CommonTree_1', 'CommonTree_3', 'CommonTree_5'], 1100, 0.55, 6);
-  criarFlorestaModelo(['TwistedTree_1', 'TwistedTree_3'], 650, 0.85, 5.5);
-  criarFlorestaModelo(['Pine_2', 'Pine_4'], 500, 0.45, 5);
-  criarFlorestaModelo(['BirchTree_1', 'BirchTree_3'], 500, 0.5, 5);
-  criarFlorestaModelo(['MapleTree_1', 'MapleTree_3'], 400, 0.55, 5);
-  criarFlorestaModelo(['DeadTree_1'], 250, 0.4, 5);
+  // Fase C: distribuicao por bioma. Cada categoria de modelos so spawna nos
+  // biomas listados em `biomasPermitidos`. densidadeBioma() controla quanto
+  // populadas ficam — caatinga 25% da mata, cerrado 55%, mata 100%.
+  // Mata Atlantica (sul/leste): floresta densa e diversa
+  criarFlorestaModelo(['CommonTree_1', 'CommonTree_3', 'CommonTree_5'], 1100, 0.55, 6, ['mata']);
+  criarFlorestaModelo(['Pine_2', 'Pine_4'], 500, 0.45, 5, ['mata']);
+  criarFlorestaModelo(['BirchTree_1', 'BirchTree_3'], 500, 0.5, 5, ['mata']);
+  criarFlorestaModelo(['MapleTree_1', 'MapleTree_3'], 400, 0.55, 5, ['mata']);
+  // Cerrado (centro/oeste): arvores tortas espacadas, gramineas
+  criarFlorestaModelo(['TwistedTree_1', 'TwistedTree_3'], 650, 0.85, 5.5, ['cerrado', 'mata']);
+  // Caatinga (norte): arvores secas raras
+  criarFlorestaModelo(['DeadTree_1'], 350, 0.4, 5, ['cerrado', 'caatinga']);
   criarVegetacaoBaixa();
   criarPedras();
   criarManchasChao();
@@ -31,20 +34,12 @@ function sortearPosNoMapa(maxTentativas) {
   return { x: (Math.random() - 0.5) * 380, z: (Math.random() - 0.5) * 380 };
 }
 
-// Sorteia uma posicao aleatoria DENTRO da silhueta de MG (rejeicao via mask).
-// Fallback: range antigo +/- 190 caso mapa-mg.js nao esteja carregado.
-function sortearPosNoMapa(maxTentativas) {
-  if (typeof sortearPontoNoEstado === 'function') {
-    var p = sortearPontoNoEstado(maxTentativas || 30);
-    if (p) return p;
-  }
-  return { x: (Math.random() - 0.5) * 380, z: (Math.random() - 0.5) * 380 };
-}
-
 // Distribui N arvores entre os modelos da lista, evitando trilha.
 // Cria 1 InstancedMesh por sub-mesh por modelo. arvoresPos guarda ref pra
 // coleta funcionar (compativel com codigo antigo).
-function criarFlorestaModelo(modelosIds, total, raioColisao, distMinTrilha) {
+// `biomasPermitidos` (Fase C, opcional): array tipo ['mata'] ou ['cerrado','caatinga'].
+// Se passado, so spawna onde biomaEm(x,z) esta na lista.
+function criarFlorestaModelo(modelosIds, total, raioColisao, distMinTrilha, biomasPermitidos) {
   if (modelosIds.length === 0) return;
 
   // Pre-cria 1 array de InstancedMesh por modelo (cada modelo pode ter varias)
@@ -75,6 +70,13 @@ function criarFlorestaModelo(modelosIds, total, raioColisao, distMinTrilha) {
     if (typeof distanciaAteRio === 'function' && distanciaAteRio(x, z) < LARGURA_RIO + 2) continue;
     // Evita plantar em encostas muito ingremes (parede de serra)
     if (typeof inclinacaoEm === 'function' && inclinacaoEm(x, z) > 0.45) continue;
+    // Filtro por bioma (Fase C)
+    if (biomasPermitidos && typeof biomaEm === 'function') {
+      var biomaLocal = biomaEm(x, z);
+      if (biomasPermitidos.indexOf(biomaLocal) === -1) continue;
+      // Aplica densidade do bioma como prob de aceitar — caatinga rejeita 75%
+      if (typeof densidadeEm === 'function' && Math.random() > densidadeEm(x, z)) continue;
+    }
 
     var modeloIdx = Math.floor(Math.random() * modelosIds.length);
     var insts = instsPorModelo[modeloIdx];
@@ -204,8 +206,17 @@ function criarVegetacaoBaixa() {
     var z = pos.z;
     if (distanciaAteTrilha(x, z) < 2.5) continue;
     if (typeof distanciaAteRio === 'function' && distanciaAteRio(x, z) < LARGURA_RIO + 1) continue;
+    // Densidade local por bioma — caatinga vegetacao baixa rara
+    if (typeof densidadeEm === 'function' && Math.random() > densidadeEm(x, z)) continue;
 
-    var modeloIdx = Math.floor(Math.random() * modelos.length);
+    // Escolhe modelo baseado no bioma local (Fase C). Mata+Cerrado → arbustos+gramineas;
+    // caatinga so grama esparsa
+    var modeloId = (typeof sortearModeloVegetacao === 'function')
+      ? sortearModeloVegetacao(x, z, 'arbustos')
+      : modelos[Math.floor(Math.random() * modelos.length)];
+    if (!modeloId) continue;
+    var modeloIdx = modelos.indexOf(modeloId);
+    if (modeloIdx < 0) continue;
     var insts = instsPorModelo[modeloIdx];
     var idx = nextIdx[modeloIdx];
     if (idx >= total) continue;
