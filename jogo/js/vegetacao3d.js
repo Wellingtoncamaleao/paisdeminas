@@ -154,12 +154,13 @@ function criarInstancedDeModelo(modeloId, total) {
   var fator = window.escalaModelos[modeloId] || 1;
   var matNorm = new THREE.Matrix4().makeScale(fator, fator, fator);
   var subs = extrairSubmeshes(gltf);
+  // Modelos pequenos NAO castam sombra (perf): bushes, ferns, grass, flowers, pebbles
+  var ePequeno = /^(Bush|Fern|Grass|Flower|Pebble)/i.test(modeloId);
   return subs.map(function(sub) {
     var inst = new THREE.InstancedMesh(sub.geometry, sub.material, total);
-    inst.castShadow = true;
+    inst.castShadow = !ePequeno;
     inst.receiveShadow = true;
     inst.count = 0;
-    // matrixBase = normalizacao(altura alvo) × transform local do sub-mesh
     inst.userData.matrixBase = matNorm.clone().multiply(sub.matrixBase);
     return inst;
   });

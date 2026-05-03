@@ -13,17 +13,20 @@ function iniciarJogo() {
 
   renderer = new THREE.WebGLRenderer({
     canvas: document.getElementById('canvas-jogo'),
-    antialias: true
+    antialias: true,
+    powerPreference: 'high-performance'
   });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  // Pixel ratio capado em 1.5 (era 2) — 1.78x menos pixels em Retina, ganho
+  // grande em mobile/Mac sem perda visivel notavel pro estilo low-poly.
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   if (renderer.outputColorSpace !== undefined) {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
   }
 
-  // Sombras dinamicas
+  // Sombras dinamicas (PCFShadowMap basico = mais rapido que PCFSoft)
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
 
   // Tone mapping cinematografico (color grading suave dourado)
   renderer.toneMapping = THREE.ACESFilmicToneMapping;

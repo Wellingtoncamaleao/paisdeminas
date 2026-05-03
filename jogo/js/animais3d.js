@@ -138,10 +138,20 @@ function spawnarAnimais() {
 }
 
 // Atualiza animais — IA simples: alterna Idle (3-6s) com Walk pra ponto random proximo (3-5m)
+// PERF: pausa mixer.update + anim de animais > 60m do player (skinning eh caro).
+// Animais distantes ficam congelados em pose mas continuam visiveis.
+var DIST_ANIMAL_LOD2 = 60 * 60; // ao quadrado pra evitar sqrt
 function atualizarAnimais(delta) {
+  var px = (typeof personagem !== 'undefined' && personagem) ? personagem.position.x : 0;
+  var pz = (typeof personagem !== 'undefined' && personagem) ? personagem.position.z : 0;
   for (var i = 0; i < window.animaisInstancias.length; i++) {
     var a = window.animaisInstancias[i];
     if (!a.mixer) continue;
+    var dxP = a.grupo.position.x - px;
+    var dzP = a.grupo.position.z - pz;
+    var dist2 = dxP * dxP + dzP * dzP;
+    // Se muito longe, pula update completo (sem skinning, sem IA, sem movimento)
+    if (dist2 > DIST_ANIMAL_LOD2) continue;
     a.mixer.update(delta);
 
     if (a.estadoAnim === 'Idle') {

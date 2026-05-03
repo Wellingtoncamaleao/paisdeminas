@@ -10,15 +10,16 @@ function iniciarFloresta() {
   // Fase C: distribuicao por bioma. Cada categoria de modelos so spawna nos
   // biomas listados em `biomasPermitidos`. densidadeBioma() controla quanto
   // populadas ficam — caatinga 25% da mata, cerrado 55%, mata 100%.
+  // PERF: counts reduzidos ~40% pra ganhar fps. Densidade visual ainda boa.
   // Mata Atlantica (sul/leste): floresta densa e diversa
-  criarFlorestaModelo(['CommonTree_1', 'CommonTree_3', 'CommonTree_5'], 1100, 0.55, 6, ['mata']);
-  criarFlorestaModelo(['Pine_2', 'Pine_4'], 500, 0.45, 5, ['mata']);
-  criarFlorestaModelo(['BirchTree_1', 'BirchTree_3'], 500, 0.5, 5, ['mata']);
-  criarFlorestaModelo(['MapleTree_1', 'MapleTree_3'], 400, 0.55, 5, ['mata']);
+  criarFlorestaModelo(['CommonTree_1', 'CommonTree_3', 'CommonTree_5'], 650, 0.55, 6, ['mata']);
+  criarFlorestaModelo(['Pine_2', 'Pine_4'], 300, 0.45, 5, ['mata']);
+  criarFlorestaModelo(['BirchTree_1', 'BirchTree_3'], 300, 0.5, 5, ['mata']);
+  criarFlorestaModelo(['MapleTree_1', 'MapleTree_3'], 240, 0.55, 5, ['mata']);
   // Cerrado (centro/oeste): arvores tortas espacadas, gramineas
-  criarFlorestaModelo(['TwistedTree_1', 'TwistedTree_3'], 650, 0.85, 5.5, ['cerrado', 'mata']);
+  criarFlorestaModelo(['TwistedTree_1', 'TwistedTree_3'], 380, 0.85, 5.5, ['cerrado', 'mata']);
   // Caatinga (norte): arvores secas raras
-  criarFlorestaModelo(['DeadTree_1'], 350, 0.4, 5, ['cerrado', 'caatinga']);
+  criarFlorestaModelo(['DeadTree_1'], 200, 0.4, 5, ['cerrado', 'caatinga']);
   criarVegetacaoBaixa();
   criarPedras();
   criarManchasChao();
@@ -131,7 +132,7 @@ function clonarMatrizes(meshInstanced) {
 // Pedras — usa Rock_Medium_1/2/3 e Pebble_Round
 function criarPedras() {
   var modelos = ['Rock_Medium_1', 'Rock_Medium_2', 'Rock_Medium_3', 'Pebble_Round_1', 'Pebble_Round_3'];
-  var total = 1000;
+  var total = 500; // PERF: era 1000
 
   var instsPorModelo = modelos.map(function(id) {
     return criarInstancedDeModelo(id, total);
@@ -184,7 +185,7 @@ function criarPedras() {
 // Vegetacao baixa: bushes, ferns, grass espalhados — decorativo, sem colisao
 function criarVegetacaoBaixa() {
   var modelos = ['Bush_Common', 'Bush_Common_Flowers', 'Bush_Large_Flowers', 'Fern_1', 'Grass_Common_Tall', 'Grass_Wispy_Tall', 'Flower_1_Clump'];
-  var total = 4500;
+  var total = 2500; // PERF: era 4500
 
   var instsPorModelo = modelos.map(function(id) {
     return criarInstancedDeModelo(id, total);
