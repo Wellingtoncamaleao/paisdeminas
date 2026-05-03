@@ -21,6 +21,24 @@ var LISTA_VEGETACAO = [
   'Pebble_Round_1', 'Pebble_Round_3'
 ];
 
+// Altura alvo (em metros do mundo) por modelo. Pack Quaternius vem em escalas
+// muito inconsistentes (CommonTree=7m, TwistedTree=17m). Normalizamos no boot
+// pra todas terem altura visualmente coerente entre si.
+var ALTURA_ALVO = {
+  CommonTree_1: 6, CommonTree_3: 6, CommonTree_5: 6,
+  TwistedTree_1: 7, TwistedTree_3: 7,
+  Pine_2: 7, Pine_4: 7,
+  DeadTree_1: 5,
+  Bush_Common: 0.7, Bush_Common_Flowers: 0.7,
+  Fern_1: 0.6,
+  Grass_Common_Tall: 0.5, Grass_Wispy_Tall: 0.5,
+  Rock_Medium_1: 0.9, Rock_Medium_2: 0.9, Rock_Medium_3: 0.9,
+  Pebble_Round_1: 0.4, Pebble_Round_3: 0.4
+};
+
+// Fator de escala calculado por modelo no boot (alturaAlvo / alturaReal)
+window.escalaModelos = {};
+
 function carregarModelosVegetacao() {
   if (Object.keys(window.modelosVegetacao).length > 0) return Promise.resolve();
   if (!window.GLTFLoader) {
@@ -37,6 +55,12 @@ function carregarModelosVegetacao() {
         'assets/vegetacao/' + id + '.gltf',
         function(gltf) {
           window.modelosVegetacao[id] = gltf;
+          // Calcula fator de normalizacao baseado na altura alvo
+          gltf.scene.updateMatrixWorld(true);
+          var box = new THREE.Box3().setFromObject(gltf.scene);
+          var altura = box.max.y - box.min.y;
+          var alturaAlvo = ALTURA_ALVO[id] || 5;
+          window.escalaModelos[id] = altura > 0.001 ? (alturaAlvo / altura) : 1;
           resolve();
         },
         undefined,
@@ -75,20 +99,23 @@ function extrairSubmeshes(gltf) {
 }
 
 // Cria array de InstancedMesh pro modelo (1 por sub-mesh). Cada inst recebe
-// userData.matrixBase pra ser combinado quando posicionar instancia.
+// userData.matrixBase ja com fator de normalizacao incorporado.
 function criarInstancedDeModelo(modeloId, total) {
   var gltf = window.modelosVegetacao[modeloId];
   if (!gltf) {
     console.warn('modelo nao carregado:', modeloId);
     return [];
   }
+  var fator = window.escalaModelos[modeloId] || 1;
+  var matNorm = new THREE.Matrix4().makeScale(fator, fator, fator);
   var subs = extrairSubmeshes(gltf);
   return subs.map(function(sub) {
     var inst = new THREE.InstancedMesh(sub.geometry, sub.material, total);
     inst.castShadow = true;
     inst.receiveShadow = true;
-    inst.count = 0; // sera incrementado conforme posicionar
-    inst.userData.matrixBase = sub.matrixBase;
+    inst.count = 0;
+    // matrixBase = normalizacao(altura alvo) × transform local do sub-mesh
+    inst.userData.matrixBase = matNorm.clone().multiply(sub.matrixBase);
     return inst;
   });
 }
