@@ -7,19 +7,28 @@ var pedrasPos = [];
 var copasParaVento = [];
 
 function iniciarFloresta() {
-  // Distribuicao baseada no que cobre bem a paisagem MG colonial:
-  // - 40% arvores frondosas grandes (CommonTree)
-  // - 25% arvores antigas/twisted (TwistedTree)
-  // - 20% pinheiros (Pine — substituto pra coniferas)
-  // - 10% arvores mortas/secas (DeadTree)
-  // - 5% bushes/fern espalhados (decorativo)
-  criarFlorestaModelo(['CommonTree_1', 'CommonTree_3', 'CommonTree_5'], 160, 0.55, 6);
-  criarFlorestaModelo(['TwistedTree_1', 'TwistedTree_3'], 100, 0.85, 5.5);
-  criarFlorestaModelo(['Pine_2', 'Pine_4'], 80, 0.45, 5);
-  criarFlorestaModelo(['DeadTree_1'], 40, 0.4, 5);
+  // Distribuicao baseada no que cobre bem a paisagem MG colonial.
+  // Totais escalados pro mundo grande (silhueta MG ~2400x1800, ~30x area antiga).
+  // Conservador (~8x) pra nao matar performance — Fase C ajusta por bioma.
+  criarFlorestaModelo(['CommonTree_1', 'CommonTree_3', 'CommonTree_5'], 1100, 0.55, 6);
+  criarFlorestaModelo(['TwistedTree_1', 'TwistedTree_3'], 650, 0.85, 5.5);
+  criarFlorestaModelo(['Pine_2', 'Pine_4'], 500, 0.45, 5);
+  criarFlorestaModelo(['BirchTree_1', 'BirchTree_3'], 500, 0.5, 5);
+  criarFlorestaModelo(['MapleTree_1', 'MapleTree_3'], 400, 0.55, 5);
+  criarFlorestaModelo(['DeadTree_1'], 250, 0.4, 5);
   criarVegetacaoBaixa();
   criarPedras();
   criarManchasChao();
+}
+
+// Sorteia uma posicao aleatoria DENTRO da silhueta de MG (rejeicao via mask).
+// Fallback: range antigo +/- 190 caso mapa-mg.js nao esteja carregado.
+function sortearPosNoMapa(maxTentativas) {
+  if (typeof sortearPontoNoEstado === 'function') {
+    var p = sortearPontoNoEstado(maxTentativas || 30);
+    if (p) return p;
+  }
+  return { x: (Math.random() - 0.5) * 380, z: (Math.random() - 0.5) * 380 };
 }
 
 // Distribui N arvores entre os modelos da lista, evitando trilha.
@@ -154,7 +163,7 @@ function criarPedras() {
 
 // Vegetacao baixa: bushes, ferns, grass espalhados — decorativo, sem colisao
 function criarVegetacaoBaixa() {
-  var modelos = ['Bush_Common', 'Bush_Common_Flowers', 'Fern_1', 'Grass_Common_Tall', 'Grass_Wispy_Tall'];
+  var modelos = ['Bush_Common', 'Bush_Common_Flowers', 'Bush_Large_Flowers', 'Fern_1', 'Grass_Common_Tall', 'Grass_Wispy_Tall', 'Flower_1_Clump'];
   var total = 600;
 
   var instsPorModelo = modelos.map(function(id) {

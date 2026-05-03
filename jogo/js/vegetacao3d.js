@@ -18,7 +18,12 @@ var LISTA_VEGETACAO = [
   'Fern_1',
   'Grass_Common_Tall', 'Grass_Wispy_Tall',
   'Rock_Medium_1', 'Rock_Medium_2', 'Rock_Medium_3',
-  'Pebble_Round_1', 'Pebble_Round_3'
+  'Pebble_Round_1', 'Pebble_Round_3',
+  // Adicoes do Ultimate Stylized Nature 2022 (variedade extra)
+  'BirchTree_1', 'BirchTree_3',
+  'MapleTree_1', 'MapleTree_3',
+  'Bush_Large_Flowers',
+  'Flower_1_Clump'
 ];
 
 // Altura alvo (em metros do mundo) por modelo. Pack Quaternius vem em escalas
@@ -33,7 +38,11 @@ var ALTURA_ALVO = {
   Fern_1: 0.6,
   Grass_Common_Tall: 0.5, Grass_Wispy_Tall: 0.5,
   Rock_Medium_1: 0.9, Rock_Medium_2: 0.9, Rock_Medium_3: 0.9,
-  Pebble_Round_1: 0.4, Pebble_Round_3: 0.4
+  Pebble_Round_1: 0.4, Pebble_Round_3: 0.4,
+  BirchTree_1: 7, BirchTree_3: 7,
+  MapleTree_1: 6.5, MapleTree_3: 6.5,
+  Bush_Large_Flowers: 1.2,
+  Flower_1_Clump: 0.4
 };
 
 // Fator de escala calculado por modelo no boot (alturaAlvo / alturaReal)
@@ -79,6 +88,9 @@ function corPaletaPorMaterial(nome) {
   if (!nome) return null;
   if (/Leaf_Pine|Leaves_Pine/i.test(nome)) return 0x3a6a30;     // pinheiro verde escuro
   if (/Leaves_TwistedTree/i.test(nome))    return 0x5a8030;     // verde-amarelo
+  if (/Leaves_BirchTree|Leaves_MapleTree/i.test(nome)) return 0x6a8a3a; // verde-amarelo brilhante
+  if (/Bark_BirchTree/i.test(nome))        return 0xd0c8b8;     // birch tem tronco branco-bege
+  if (/Bark_MapleTree/i.test(nome))        return 0x6a4a26;     // marrom escuro
   if (/Leaves_NormalTree|Leaves/i.test(nome)) return 0x4a8033;  // verde tropical medio
   if (/Bark_DeadTree/i.test(nome))         return 0x6a5040;     // morta cinza-bege
   if (/Bark_TwistedTree/i.test(nome))      return 0x6a4a26;     // marrom escuro

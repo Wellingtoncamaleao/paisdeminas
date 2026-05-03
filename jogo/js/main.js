@@ -8,7 +8,7 @@ function iniciarJogo() {
     72,
     window.innerWidth / window.innerHeight,
     0.1,
-    400
+    1700
   );
 
   renderer = new THREE.WebGLRenderer({
@@ -44,6 +44,8 @@ function iniciarJogo() {
     colocarPalmeirasMargem();
     colocarCliffs();
   }
+  // Spawna animais animados pelo mapa
+  if (typeof spawnarAnimais === 'function') spawnarAnimais();
   iniciarPersonagem();
   iniciarControles();
   iniciarCamera();
@@ -104,6 +106,7 @@ function animar() {
   atualizarFumaca(delta);
   atualizarFogueiras(delta);
   atualizarOutrosJogadores(delta);
+  if (typeof atualizarAnimais === 'function') atualizarAnimais(delta);
   if (typeof atualizarMover === 'function') atualizarMover(delta);
   atualizarAudio(delta);
   enviarPingPosicao();
@@ -128,6 +131,9 @@ document.addEventListener('DOMContentLoaded', function() {
   if (typeof carregarModelosPirate === 'function') {
     carregarModelosPirate().catch(function(e) { console.error('Erro pirate:', e); });
   }
+  if (typeof carregarModelosAnimais === 'function') {
+    carregarModelosAnimais().catch(function(e) { console.error('Erro animais:', e); });
+  }
 
   document.getElementById('btn-comecar').addEventListener('click', async function() {
     if (!window.session) {
@@ -144,7 +150,8 @@ document.addEventListener('DOMContentLoaded', function() {
         apiCarregarEstado(),
         carregarModeloColono(),
         carregarModelosVegetacao(),
-        carregarModelosPirate()
+        carregarModelosPirate(),
+        carregarModelosAnimais()
       ]);
       window.estadoServidor = resultados[0];
     } catch (e) {
