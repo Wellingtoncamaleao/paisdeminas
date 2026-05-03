@@ -51,6 +51,7 @@ function criarFlorestaModelo(modelosIds, total, raioColisao, distMinTrilha) {
     var x = (Math.random() - 0.5) * 380;
     var z = (Math.random() - 0.5) * 380;
     if (distanciaAteTrilha(x, z) < distMinTrilha) continue;
+    if (typeof distanciaAteRio === 'function' && distanciaAteRio(x, z) < LARGURA_RIO + 2) continue;
 
     var modeloIdx = Math.floor(Math.random() * modelosIds.length);
     var insts = instsPorModelo[modeloIdx];
@@ -123,6 +124,7 @@ function criarPedras() {
     var x = (Math.random() - 0.5) * 380;
     var z = (Math.random() - 0.5) * 380;
     if (distanciaAteTrilha(x, z) < 4) continue;
+    if (typeof distanciaAteRio === 'function' && distanciaAteRio(x, z) < LARGURA_RIO + 2) continue;
 
     var modeloIdx = Math.floor(Math.random() * modelos.length);
     var insts = instsPorModelo[modeloIdx];
@@ -172,6 +174,7 @@ function criarVegetacaoBaixa() {
     var x = (Math.random() - 0.5) * 380;
     var z = (Math.random() - 0.5) * 380;
     if (distanciaAteTrilha(x, z) < 2.5) continue;
+    if (typeof distanciaAteRio === 'function' && distanciaAteRio(x, z) < LARGURA_RIO + 1) continue;
 
     var modeloIdx = Math.floor(Math.random() * modelos.length);
     var insts = instsPorModelo[modeloIdx];

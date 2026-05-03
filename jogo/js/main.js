@@ -35,7 +35,15 @@ function iniciarJogo() {
   iniciarMundo();
   inicializarEstrelas();   // depende do ceuGrupo criado em iniciarMundo
   iniciarTrilha();
+  iniciarRio();           // depois da trilha (floresta filtra ambos)
   iniciarFloresta();
+  // Decoracao aquatica do Pirate Kit (precisa de rio + modelos carregados)
+  if (typeof colocarPontePirate === 'function') {
+    colocarPontePirate();
+    colocarDocaEbarco();
+    colocarPalmeirasMargem();
+    colocarCliffs();
+  }
   iniciarPersonagem();
   iniciarControles();
   iniciarCamera();
@@ -110,12 +118,15 @@ window.estadoServidor = null;
 document.addEventListener('DOMContentLoaded', function() {
   inicializarLogin();
 
-  // Pre-carrega modelos 3d (colono + vegetacao) em background
+  // Pre-carrega modelos 3d (colono + vegetacao + pirate) em background
   if (typeof carregarModeloColono === 'function') {
     carregarModeloColono().catch(function(e) { console.error('Erro colono:', e); });
   }
   if (typeof carregarModelosVegetacao === 'function') {
     carregarModelosVegetacao().catch(function(e) { console.error('Erro vegetacao:', e); });
+  }
+  if (typeof carregarModelosPirate === 'function') {
+    carregarModelosPirate().catch(function(e) { console.error('Erro pirate:', e); });
   }
 
   document.getElementById('btn-comecar').addEventListener('click', async function() {
@@ -132,7 +143,8 @@ document.addEventListener('DOMContentLoaded', function() {
       var resultados = await Promise.all([
         apiCarregarEstado(),
         carregarModeloColono(),
-        carregarModelosVegetacao()
+        carregarModelosVegetacao(),
+        carregarModelosPirate()
       ]);
       window.estadoServidor = resultados[0];
     } catch (e) {
