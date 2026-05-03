@@ -5,10 +5,21 @@
 window.modelosAnimais = {};
 window.animaisInstancias = []; // [{ grupo, mixer, actions, estado, alvoX, alvoZ, fase }]
 
-var LISTA_ANIMAIS = ['Cow', 'Horse', 'Deer', 'Fox'];
+// 7 animais — modelos Quaternius mapeados pra fauna brasileira:
+// Cow=Vaca, Horse=Cavalo, Deer=Cervo, Fox=Lobo Guara, Bull=Boi,
+// Stag=Veado-Galheiro, Donkey=Burro Tropeiro
+var LISTA_ANIMAIS = ['Cow', 'Horse', 'Deer', 'Fox', 'Bull', 'Stag', 'Donkey'];
 
 var ALTURA_ANIMAL = {
-  Cow: 1.4, Horse: 1.7, Deer: 1.5, Fox: 0.6
+  Cow: 1.4, Horse: 1.7, Deer: 1.5, Fox: 0.6,
+  Bull: 1.6, Stag: 1.7, Donkey: 1.4
+};
+
+// Pesos de spawn — mais bois/vacas (gado de fazenda) e cervos (mata),
+// menos lobos (raros). Soma normalizada na funcao de sorteio.
+var PESO_ANIMAL = {
+  Cow: 3, Bull: 2, Horse: 1.5, Donkey: 1.5,
+  Deer: 2.5, Stag: 1.5, Fox: 0.8
 };
 
 window.escalaAnimais = {};
@@ -80,19 +91,40 @@ function criarInstanciaAnimal(modeloId) {
 
 // Spawna ~12 animais aleatoriamente pelo mapa, longe da trilha e rio
 function spawnarAnimais() {
-  var modelos = LISTA_ANIMAIS;
+  // Sorteio ponderado por peso: gado/cervo mais comum, lobo raro
+  var pesos = LISTA_ANIMAIS.map(function(m) { return PESO_ANIMAL[m] || 1; });
+  var pesoTotal = pesos.reduce(function(a, b) { return a + b; }, 0);
+  function sortearModelo() {
+    var r = Math.random() * pesoTotal;
+    var acc = 0;
+    for (var i = 0; i < LISTA_ANIMAIS.length; i++) {
+      acc += pesos[i];
+      if (r < acc) return LISTA_ANIMAIS[i];
+    }
+    return LISTA_ANIMAIS[0];
+  }
+
   var tentativas = 0;
-  while (window.animaisInstancias.length < 12 && tentativas < 200) {
+  while (window.animaisInstancias.length < 22 && tentativas < 300) {
     tentativas++;
-    var x = (Math.random() - 0.5) * 320;
-    var z = (Math.random() - 0.5) * 320;
+    // Sorteia ponto dentro da silhueta de MG (Fase A) — fallback range antigo
+    var x, z;
+    if (typeof sortearPontoNoEstado === 'function') {
+      var pos = sortearPontoNoEstado(15);
+      if (!pos) continue;
+      x = pos.x; z = pos.z;
+    } else {
+      x = (Math.random() - 0.5) * 320;
+      z = (Math.random() - 0.5) * 320;
+    }
     if (typeof distanciaAteTrilha === 'function' && distanciaAteTrilha(x, z) < 6) continue;
     if (typeof distanciaAteRio === 'function' && distanciaAteRio(x, z) < 8) continue;
 
-    var modId = modelos[Math.floor(Math.random() * modelos.length)];
+    var modId = sortearModelo();
     var inst = criarInstanciaAnimal(modId);
     if (!inst) continue;
-    inst.grupo.position.set(x, 0, z);
+    var yChao = (typeof alturaEm === 'function') ? alturaEm(x, z) : 0;
+    inst.grupo.position.set(x, yChao, z);
     inst.grupo.rotation.y = Math.random() * Math.PI * 2;
     inst.tipoAnimal = modId;
     inst.alvoX = x;
@@ -120,9 +152,15 @@ function atualizarAnimais(delta) {
         var dist = 3 + Math.random() * 4;
         a.alvoX = a.grupo.position.x + Math.cos(ang) * dist;
         a.alvoZ = a.grupo.position.z + Math.sin(ang) * dist;
-        // Limite area
-        a.alvoX = Math.max(-180, Math.min(180, a.alvoX));
-        a.alvoZ = Math.max(-180, Math.min(180, a.alvoZ));
+        // Limite area: silhueta de MG (Fase A). Fallback +/- 180.
+        if (typeof dentroDoEstado === 'function' && !dentroDoEstado(a.alvoX, a.alvoZ)) {
+          // Tenta no centro pra "voltar" se foi pra fora
+          a.alvoX = a.grupo.position.x;
+          a.alvoZ = a.grupo.position.z;
+        } else if (typeof MG_BOUNDS === 'undefined') {
+          a.alvoX = Math.max(-180, Math.min(180, a.alvoX));
+          a.alvoZ = Math.max(-180, Math.min(180, a.alvoZ));
+        }
         a.tempoIdle = 0;
         a.tempoWalk = 0;
         trocarAnimAnimal(a, 'Walk');
@@ -141,6 +179,10 @@ function atualizarAnimais(delta) {
         var dirX = dx / d, dirZ = dz / d;
         a.grupo.position.x += dirX * velocidade * delta;
         a.grupo.position.z += dirZ * velocidade * delta;
+        // Anda no relevo: Y do animal acompanha terreno (Fase B)
+        if (typeof alturaEm === 'function') {
+          a.grupo.position.y = alturaEm(a.grupo.position.x, a.grupo.position.z);
+        }
         // Rotaciona suave pra direcao do movimento
         var anguloAlvo = Math.atan2(dirX, dirZ);
         var diff = anguloAlvo - a.grupo.rotation.y;
