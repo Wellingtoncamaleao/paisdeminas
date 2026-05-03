@@ -3,24 +3,29 @@ var trilhaSpline;
 var pontosTrilha;
 
 function iniciarTrilha() {
-  // Pontos da trilha — comeca canto sudoeste, termina nordeste
+  // Pontos da trilha — Caminho do Sertao mineiro: sai do sul (Mantiqueira,
+  // simbolizando o Caminho Velho do Ouro vindo do RJ), passa pelo centro,
+  // segue norte ate o Sertao. Cobre o estado em diagonal SO->NE serpenteando.
   pontosTrilha = [
-    new THREE.Vector3(-160, 0, -160),
-    new THREE.Vector3(-100, 0, -110),
-    new THREE.Vector3(-50, 0, -70),
-    new THREE.Vector3(-20, 0, -30),
-    new THREE.Vector3(15, 0, 5),
-    new THREE.Vector3(45, 0, 35),
-    new THREE.Vector3(75, 0, 75),
-    new THREE.Vector3(120, 0, 120),
-    new THREE.Vector3(160, 0, 160),
+    new THREE.Vector3(-100, 0, -800),  // sul: entrada Mantiqueira (Caminho Velho)
+    new THREE.Vector3(-50, 0, -650),
+    new THREE.Vector3(20, 0, -500),
+    new THREE.Vector3(80, 0, -350),
+    new THREE.Vector3(50, 0, -200),
+    new THREE.Vector3(-20, 0, -50),
+    new THREE.Vector3(-80, 0, 100),
+    new THREE.Vector3(-30, 0, 280),
+    new THREE.Vector3(80, 0, 450),
+    new THREE.Vector3(180, 0, 600),
+    new THREE.Vector3(150, 0, 750),    // norte: Sertao
   ];
 
   trilhaSpline = new THREE.CatmullRomCurve3(pontosTrilha, false, 'catmullrom', 0.4);
 
   // Gera fita de trilha amostrando a spline em N segmentos
-  var segmentos = 240;
-  var largura = 3.2;
+  // Largura aumentada (3.2 -> 5) pra ser visivel na escala maior do mundo
+  var segmentos = 360;
+  var largura = 5;
   var vertices = [];
   var indices = [];
 

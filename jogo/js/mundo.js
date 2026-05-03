@@ -11,20 +11,71 @@ var luaMesh;        // esfera branca-azulada
 function iniciarMundo() {
   // Ceu de amanhecer com gradiente (rosa no horizonte, azul-claro no zenite)
   criarCeuGradiente();
-  // Neblina mais branda — so esconde os limites longes
-  cena.fog = new THREE.Fog(0xe8a872, 70, 260);
+  // Neblina ampliada pro mundo grande (Fase A: silhueta MG ~2400x1800)
+  cena.fog = new THREE.Fog(0xe8a872, 250, 1500);
 
-  // Terreno — plano grande com textura de grama proceduralmente gerada
-  var terrenoGeo = new THREE.PlaneGeometry(420, 420, 1, 1);
+  // Terreno — usa o contorno de MG (mapa-mg.js) pra criar Shape recortado.
+  // Fora do estado fica "agua/desconhecido" (plano azul abaixo).
+  var temContorno = (typeof MG_CONTORNO !== 'undefined') && MG_CONTORNO.length > 0;
+  var largMundo = (typeof MG_BOUNDS !== 'undefined') ? (MG_BOUNDS.xMax - MG_BOUNDS.xMin) : 2400;
+  var profMundo = (typeof MG_BOUNDS !== 'undefined') ? (MG_BOUNDS.zMax - MG_BOUNDS.zMin) : 1800;
+
+  var terrenoGeo;
+  if (temContorno) {
+    // Constroi Shape XY (depois rotaciona pra XZ junto com o mesh).
+    // Atencao: ShapeGeometry triangula no plano XY; nosso "z mundial" entra
+    // como Y do shape. Usa Y NEGATIVO pra preservar handedness (apos rotate -PI/2
+    // em X, o eixo Y do shape se torna -Z mundial → invertemos pra alinhar).
+    var shape = new THREE.Shape();
+    for (var ci = 0; ci < MG_CONTORNO.length; ci++) {
+      var px = MG_CONTORNO[ci].x;
+      var py = -MG_CONTORNO[ci].z; // inverte Z pra ficar correto apos rotation.x = -PI/2
+      if (ci === 0) shape.moveTo(px, py);
+      else shape.lineTo(px, py);
+    }
+    shape.closePath();
+    terrenoGeo = new THREE.ShapeGeometry(shape, 16);
+    // UV manual baseado em XY pra que repeticao de textura saia uniforme
+    var posAttr = terrenoGeo.attributes.position;
+    var uvs = new Float32Array(posAttr.count * 2);
+    for (var vi = 0; vi < posAttr.count; vi++) {
+      uvs[vi * 2] = posAttr.getX(vi) / 8;     // 1 unidade de UV = 8m de mundo
+      uvs[vi * 2 + 1] = posAttr.getY(vi) / 8;
+    }
+    terrenoGeo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+  } else {
+    // Fallback retangular (caso mapa-mg.js nao tenha sido carregado)
+    terrenoGeo = new THREE.PlaneGeometry(largMundo, profMundo, 1, 1);
+  }
+
   var terrenoMat = new THREE.MeshLambertMaterial({
     color: 0xffffff,
-    map: texturaGrama()
+    map: texturaGrama(),
+    side: THREE.DoubleSide  // garante render independente do winding do Shape
   });
+  if (terrenoMat.map) {
+    terrenoMat.map.wrapS = THREE.RepeatWrapping;
+    terrenoMat.map.wrapT = THREE.RepeatWrapping;
+  }
   terrenoMesh = new THREE.Mesh(terrenoGeo, terrenoMat);
   terrenoMesh.rotation.x = -Math.PI / 2;
   terrenoMesh.position.y = 0;
   terrenoMesh.receiveShadow = true;
   cena.add(terrenoMesh);
+
+  // Plano "agua/oceano" abaixo + ao redor do estado — preenche o que esta fora
+  // da silhueta com cor de mar/distancia. Tamanho generoso pra cobrir todo o
+  // far da camera mesmo nas pontas do estado.
+  var bordaGeo = new THREE.PlaneGeometry(largMundo * 2.5, profMundo * 2.5, 1, 1);
+  var bordaMat = new THREE.MeshBasicMaterial({ color: 0x3a5a78, fog: true });
+  var bordaMesh = new THREE.Mesh(bordaGeo, bordaMat);
+  bordaMesh.rotation.x = -Math.PI / 2;
+  if (typeof MG_BOUNDS !== 'undefined') {
+    bordaMesh.position.x = (MG_BOUNDS.xMin + MG_BOUNDS.xMax) / 2;
+    bordaMesh.position.z = (MG_BOUNDS.zMin + MG_BOUNDS.zMax) / 2;
+  }
+  bordaMesh.position.y = -0.3; // logo abaixo do terreno
+  cena.add(bordaMesh);
 
   // Luz ambiente — azul-acinzentada do amanhecer (vinda de cima e do chao verde)
   var luzAmbiente = new THREE.HemisphereLight(0xfff0d4, 0x3d5e2e, 0.5);
@@ -54,15 +105,16 @@ function iniciarMundo() {
   window.__sol = sol;
 
   // Esfera visivel representando o sol no ceu — anexada ao grupo do ceu (segue camera)
-  var solGeo = new THREE.SphereGeometry(15, 24, 16);
+  // Tamanho proporcional ao novo skydome (1600 raio): sol ~80, lua ~60
+  var solGeo = new THREE.SphereGeometry(80, 24, 16);
   var solMat = new THREE.MeshBasicMaterial({ color: 0xfff2cc, fog: false });
   var solVisual = new THREE.Mesh(solGeo, solMat);
   solVisualMesh = solVisual;
-  solVisual.position.set(220, 90, 140);
+  solVisual.position.set(1100, 450, 700);
   ceuGrupo.add(solVisual);
 
   // Lua — esfera branca-azulada oposta ao sol, visivel a noite
-  var luaGeo = new THREE.SphereGeometry(11, 20, 14);
+  var luaGeo = new THREE.SphereGeometry(60, 20, 14);
   var luaMat = new THREE.MeshBasicMaterial({ color: 0xe8e8ff, fog: false });
   luaMesh = new THREE.Mesh(luaGeo, luaMat);
   luaMesh.visible = false;
@@ -86,7 +138,7 @@ function criarCeuGradiente() {
   ceuGrupo = new THREE.Group();
   cena.add(ceuGrupo);
 
-  var skyGeo = new THREE.SphereGeometry(300, 32, 16);
+  var skyGeo = new THREE.SphereGeometry(1600, 32, 16);
   skyMaterial = new THREE.ShaderMaterial({
     side: THREE.BackSide,
     fog: false,
@@ -145,15 +197,16 @@ function aplicarTempoNoMundo(t) {
   solGlobal.intensity = calcularIntensidadeSol(t);
 
   // Sol visual no ceu (no ceuGrupo, posicao local — segue camera)
+  // Raio do skydome = 1600; posiciona o sol a 1300 do centro pra ficar dentro
   var solPos = calcularPosicaoSol(t);
   if (solVisualMesh) {
-    solVisualMesh.position.copy(solPos.clone().multiplyScalar(2.2));
+    solVisualMesh.position.copy(solPos.clone().normalize().multiplyScalar(1300));
     solVisualMesh.visible = solGlobal.intensity > 0.05;
   }
 
   // Lua: oposta ao sol, visivel quando sol fraco
   if (luaMesh) {
-    luaMesh.position.copy(solPos.clone().multiplyScalar(-2.2));
+    luaMesh.position.copy(solPos.clone().normalize().multiplyScalar(-1300));
     luaMesh.visible = solGlobal.intensity < 0.4;
   }
 

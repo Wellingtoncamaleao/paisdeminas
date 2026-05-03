@@ -5,20 +5,26 @@
 var rioSpline = null;
 var pontosRio = null;
 var rioMesh = null;
-var LARGURA_RIO = 6.5;
+// Rio Sao Francisco — corre S->N pelo centro/oeste do estado.
+// Largura ampliada (6.5 -> 14) pra se ler bem na escala MG (~2400x1800)
+var LARGURA_RIO = 14;
 
 function iniciarRio() {
+  // Trajeto aproximado do Sao Francisco em MG: nasce na Serra da Canastra
+  // (sudoeste, perto do Triangulo), corre N pelo centro-oeste, sai pra BA.
   pontosRio = [
-    new THREE.Vector3(-200, 0,  60),
-    new THREE.Vector3(-130, 0,  35),
-    new THREE.Vector3( -60, 0,  10),
-    new THREE.Vector3(  30, 0,  20),  // cruza trilha aqui (ponte ficara aqui)
-    new THREE.Vector3( 110, 0,  35),
-    new THREE.Vector3( 200, 0,  85)
+    new THREE.Vector3(-450, 0, -550),  // nascente Canastra (sudoeste)
+    new THREE.Vector3(-380, 0, -350),
+    new THREE.Vector3(-280, 0, -150),
+    new THREE.Vector3(-180, 0,  20),   // entronca trilha (ponte aqui)
+    new THREE.Vector3(-100, 0,  200),
+    new THREE.Vector3( -50, 0,  400),
+    new THREE.Vector3(  20, 0,  600),
+    new THREE.Vector3(  80, 0,  780)   // sai pra BA (norte)
   ];
   rioSpline = new THREE.CatmullRomCurve3(pontosRio, false, 'catmullrom', 0.4);
 
-  var segmentos = 240;
+  var segmentos = 360;
   var vertices = [];
   var uvs = [];
   var indices = [];

@@ -11,17 +11,28 @@ function entrarModoEscolherSpawn() {
     aplicarPresetCamera(3, false); // tatica (top-down)
   }
 
-  // Spawn temporario aleatorio fora da trilha
+  // Spawn temporario: sorteia ponto dentro da silhueta de MG perto da trilha
+  // (caminhada inicial proxima do Caminho do Sertao). Tenta por 80 vezes
+  // pra cair no estado, perto da trilha mas nao em cima dela.
   var tentativa = 0;
-  do {
-    var rx = (Math.random() - 0.5) * 200;
-    var rz = (Math.random() - 0.5) * 200;
+  var rx = 0, rz = 0;
+  while (tentativa < 80) {
     tentativa++;
-    if (typeof distanciaAteTrilha !== 'function' || distanciaAteTrilha(rx, rz) > 8) {
-      personagem.position.set(rx, 0, rz);
+    var pos = (typeof sortearPontoNoEstado === 'function')
+      ? sortearPontoNoEstado(20)
+      : { x: (Math.random() - 0.5) * 200, z: (Math.random() - 0.5) * 200 };
+    if (!pos) continue;
+    rx = pos.x;
+    rz = pos.z;
+    // Perto da trilha (<= 60u) mas fora dela (>= 8u)
+    if (typeof distanciaAteTrilha === 'function') {
+      var d = distanciaAteTrilha(rx, rz);
+      if (d > 8 && d < 60) break;
+    } else {
       break;
     }
-  } while (tentativa < 50);
+  }
+  personagem.position.set(rx, 0, rz);
 
   // Cria overlay com instrucao + botao
   if (!document.getElementById('overlay-spawn')) {

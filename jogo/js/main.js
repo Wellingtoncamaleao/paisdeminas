@@ -31,7 +31,10 @@ function iniciarJogo() {
 
   relogio = new THREE.Clock();
 
-  // Ordem importa: mundo → trilha → floresta (depende da trilha) → personagem → controles → camera → audio
+  // Ordem importa: mapa-mg → mundo → trilha → floresta (depende da trilha) → personagem → controles → camera → audio
+  // mapa-mg.js gera a silhueta de MG (mask + bounds) usada por mundo, colisao,
+  // floresta, spawn, claim — precisa rodar primeiro de tudo.
+  if (typeof iniciarMapaMG === 'function') iniciarMapaMG();
   iniciarMundo();
   inicializarEstrelas();   // depende do ceuGrupo criado em iniciarMundo
   iniciarTrilha();

@@ -38,6 +38,13 @@ async function tentarClaim() {
     return;
   }
 
+  // Rejeita claim fora da silhueta de MG (defesa em profundidade — colisao
+  // ja barra mas se algum bug deixar passar, evita persistir lote invalido).
+  if (typeof dentroDoEstado === 'function' && !dentroDoEstado(px, pz)) {
+    mostrarDica('Voce esta fora de Minas Gerais', 2500);
+    return;
+  }
+
   var rotY = obterRotacaoAlinhada(px, pz);
 
   // Verifica se algum ponto do perimetro do retangulo invade a trilha

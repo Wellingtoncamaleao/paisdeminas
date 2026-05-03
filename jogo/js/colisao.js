@@ -4,8 +4,13 @@ var paredesCabana = []; // retangulos de parede {x, z, larg, prof, rotY}
 function podeMover(x, z) {
   var margem = 0.5; // raio do personagem
 
-  // Limites do mundo
-  if (x < -195 || x > 195 || z < -195 || z > 195) return false;
+  // Limites do mundo: silhueta de MG (mapa-mg.js).
+  // Fallback retangular caso mapa-mg.js nao esteja disponivel.
+  if (typeof dentroDoEstado === 'function') {
+    if (!dentroDoEstado(x, z)) return false;
+  } else if (x < -195 || x > 195 || z < -195 || z > 195) {
+    return false;
+  }
 
   // Arvores
   for (var i = 0; i < arvoresPos.length; i++) {

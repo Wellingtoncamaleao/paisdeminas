@@ -99,19 +99,37 @@ function criarInstanciaPirate(modeloId) {
   return grupo;
 }
 
-// Cria ponte sobre o rio no cruzamento com a trilha (~30, 20).
-// Calcula angulo do rio nesse ponto pra alinhar a ponte perpendicular.
+// Cria ponte sobre o rio no cruzamento real com a trilha.
+// Varre pontos da trilha procurando o que tem menor distancia ao rio
+// e usa esse ponto pra ancorar a ponte (auto-ajusta a qualquer mudanca
+// de coords da trilha/rio — antes era hardcoded em (30,20) da escala antiga).
 function colocarPontePirate() {
-  if (!window.rioSpline) return;
-  var info = pontoRioMaisProx(30, 20);
+  if (!window.rioSpline || typeof trilhaSpline === 'undefined' || !trilhaSpline) return;
+
+  // Acha t da trilha onde a distancia ao rio e minima
+  var menorDist2 = Infinity;
+  var melhorT = 0;
+  for (var i = 0; i <= 200; i++) {
+    var t = i / 200;
+    var pt = trilhaSpline.getPoint(t);
+    var d = distanciaAteRio(pt.x, pt.z);
+    if (d * d < menorDist2) {
+      menorDist2 = d * d;
+      melhorT = t;
+    }
+  }
+  var pTrilha = trilhaSpline.getPoint(melhorT);
+  var info = pontoRioMaisProx(pTrilha.x, pTrilha.z);
   if (!info) return;
   var p = info.ponto;
   var tan = window.rioSpline.getTangent(info.t);
-  // Ponte perpendicular ao rio (alinhada com tangente da trilha)
+  // Ponte perpendicular ao rio
   var ponte = criarInstanciaPirate('Environment_Dock');
   ponte.position.set(p.x, 0.0, p.z);
   ponte.rotation.y = Math.atan2(tan.x, tan.z);
-  ponte.scale.setScalar(window.escalaPirate.Environment_Dock * 2.5); // 2.5x pra cobrir 16m largura rio
+  // Escala pra cobrir LARGURA_RIO * 2 com folga
+  var escalaCobertura = (LARGURA_RIO * 2.4) / 6.5; // 6.5 era largura quando 2.5x cobria
+  ponte.scale.setScalar(window.escalaPirate.Environment_Dock * escalaCobertura);
   cena.add(ponte);
 }
 
@@ -171,15 +189,21 @@ function colocarPalmeirasMargem() {
   }
 }
 
-// Cliffs perto das pontas do rio (oeste/leste)
+// Cliffs perto das pontas do rio (nascente sudoeste e foz norte)
+// Posiciona dinamicamente nos extremos do rio pra acompanhar qualquer
+// mudanca de coords (antes estava hardcoded na escala antiga).
 function colocarCliffs() {
+  if (!window.rioSpline) return;
+  var pInicio = window.rioSpline.getPoint(0.02);
+  var pFim = window.rioSpline.getPoint(0.98);
+
   var c1 = criarInstanciaPirate('Environment_Cliff1');
-  c1.position.set(-180, 0, 70);
+  c1.position.set(pInicio.x - 8, 0, pInicio.z + 4);
   c1.rotation.y = Math.PI * 0.3;
   cena.add(c1);
 
   var c2 = criarInstanciaPirate('Environment_Cliff2');
-  c2.position.set(180, 0, 95);
+  c2.position.set(pFim.x + 8, 0, pFim.z + 4);
   c2.rotation.y = -Math.PI * 0.4;
   cena.add(c2);
 }
