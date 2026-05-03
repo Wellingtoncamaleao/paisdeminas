@@ -110,11 +110,12 @@ window.estadoServidor = null;
 document.addEventListener('DOMContentLoaded', function() {
   inicializarLogin();
 
-  // Pre-carrega modelo .glb em background pra ja estar pronto quando clicar Comecar
+  // Pre-carrega modelos 3d (colono + vegetacao) em background
   if (typeof carregarModeloColono === 'function') {
-    carregarModeloColono().catch(function(e) {
-      console.error('Erro carregando modelo:', e);
-    });
+    carregarModeloColono().catch(function(e) { console.error('Erro colono:', e); });
+  }
+  if (typeof carregarModelosVegetacao === 'function') {
+    carregarModelosVegetacao().catch(function(e) { console.error('Erro vegetacao:', e); });
   }
 
   document.getElementById('btn-comecar').addEventListener('click', async function() {
@@ -127,10 +128,11 @@ document.addEventListener('DOMContentLoaded', function() {
     btn.disabled = true;
     btn.textContent = 'Carregando...';
     try {
-      // Carrega estado + modelo 3d em paralelo
+      // Carrega estado + modelos 3d em paralelo
       var resultados = await Promise.all([
         apiCarregarEstado(),
-        carregarModeloColono()
+        carregarModeloColono(),
+        carregarModelosVegetacao()
       ]);
       window.estadoServidor = resultados[0];
     } catch (e) {

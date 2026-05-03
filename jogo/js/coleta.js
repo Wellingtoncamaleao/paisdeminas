@@ -82,10 +82,18 @@ function encontrarMaisProximo(arr, px, pz) {
 function removerArvore(arv) {
   // Esconde instancia (escala 0 — fica invisivel mas nao precisa mexer no count)
   var mZero = obterMatrixZero();
-  arv.troncoMesh.setMatrixAt(arv.idx, mZero);
-  arv.copaMesh.setMatrixAt(arv.idx, mZero);
-  arv.troncoMesh.instanceMatrix.needsUpdate = true;
-  arv.copaMesh.instanceMatrix.needsUpdate = true;
+  // Se a arvore vem do pack Quaternius, _todosInsts cobre tronco+folhas+galhos
+  if (arv._todosInsts) {
+    for (var ti = 0; ti < arv._todosInsts.length; ti++) {
+      arv._todosInsts[ti].setMatrixAt(arv.idx, mZero);
+      arv._todosInsts[ti].instanceMatrix.needsUpdate = true;
+    }
+  } else {
+    arv.troncoMesh.setMatrixAt(arv.idx, mZero);
+    arv.copaMesh.setMatrixAt(arv.idx, mZero);
+    arv.troncoMesh.instanceMatrix.needsUpdate = true;
+    arv.copaMesh.instanceMatrix.needsUpdate = true;
+  }
 
   // Tambem zera a matriz original guardada pelo vento (senao vento sobrescreve no proximo frame)
   if (typeof copasParaVento !== 'undefined') {
